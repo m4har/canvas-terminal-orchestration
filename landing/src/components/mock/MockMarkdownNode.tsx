@@ -10,10 +10,10 @@ export function MockMarkdownNode({
       className={`absolute flex flex-col overflow-hidden rounded-md border border-[var(--border)] bg-[var(--node-fill)] shadow-sm ${className ?? ""}`}
       style={style}
     >
-      <div className="border-b border-[var(--border)] px-2 py-1.5 text-sm font-medium">
+      <div className="border-b border-[var(--border)] px-2 py-1 text-xs font-medium">
         Plan
       </div>
-      <div className="flex-1 overflow-hidden p-2 font-mono text-[10px] leading-relaxed text-[var(--muted-foreground)]">
+      <div className="min-h-0 flex-1 overflow-hidden p-1.5 font-mono text-[9px] leading-snug text-[var(--muted-foreground)]">
         <p className="font-semibold text-[var(--foreground)]"># Auth Refactor Plan</p>
         <p className="mt-1">Reference panes by id:</p>
         <p className="mt-1">• pane-planner → Planner</p>

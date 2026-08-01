@@ -56,14 +56,14 @@ export function MockTerminalNode({
       className={`absolute flex flex-col overflow-hidden rounded-md border border-[var(--border)] bg-[var(--node-fill)] shadow-sm ${className ?? ""}`}
       style={style}
     >
-      <div className="flex items-center gap-2 border-b border-[var(--border)] px-2 py-1.5">
+      <div className="flex min-h-0 items-center gap-1.5 border-b border-[var(--border)] px-2 py-1">
         <MockStatusIcon status={status} />
-        <span className="text-sm font-medium">{label}</span>
-        <span className="ml-auto rounded bg-[var(--muted)] px-1.5 py-0.5 font-mono text-[9px] text-[var(--muted-foreground)]">
+        <span className="truncate text-xs font-medium">{label}</span>
+        <span className="ml-auto shrink-0 rounded bg-[var(--muted)] px-1 py-0.5 font-mono text-[8px] text-[var(--muted-foreground)]">
           {paneId}
         </span>
       </div>
-      <div className="flex-1 overflow-hidden p-2 font-mono text-[10px] leading-relaxed">
+      <div className="min-h-0 flex-1 overflow-hidden p-1.5 font-mono text-[9px] leading-snug">
         {lines.slice(0, visibleLines).map((line, i) => (
           <p
             key={i}

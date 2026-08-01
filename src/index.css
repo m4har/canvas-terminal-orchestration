@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+}
+
+:root {
+  --background: oklch(0.985 0 0);
+  --foreground: oklch(0.21 0 0);
+  --muted: oklch(0.967 0 0);
+  --muted-foreground: oklch(0.55 0 0);
+  --border: oklch(0.92 0 0);
+  --canvas-bg: oklch(0.985 0 0);
+  --canvas-dot: oklch(0.85 0 0);
+  --node-fill: oklch(0.967 0 0);
+  --node-hover: oklch(0.94 0 0);
+  --edge-stroke: oklch(0.7 0 0);
+  --ring: oklch(0.7 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --muted: oklch(0.27 0 0);
+  --muted-foreground: oklch(0.65 0 0);
+  --border: oklch(0.27 0 0);
+  --canvas-bg: oklch(0.145 0 0);
+  --canvas-dot: oklch(0.32 0 0);
+  --node-fill: oklch(0.27 0 0);
+  --node-hover: oklch(0.32 0 0);
+  --edge-stroke: oklch(0.55 0 0);
+  --ring: oklch(0.55 0 0);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.react-flow__background {
+  background-color: var(--canvas-bg) !important;
+}
+
+.react-flow__node-text,
+.react-flow__node-square {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Square frame stays behind; interior clicks pass through to nodes below */
+.react-flow__node-square {
+  pointer-events: none;
+}
+
+.react-flow__node-square .square-drag-handle,
+.react-flow__node-square .react-flow__resize-control,
+.react-flow__node-square .react-flow__resize-control.handle {
+  pointer-events: auto;
+}
+
+.xterm {
+  padding: 2px;
+}
+
+.xterm-viewport {
+  border-radius: 2px;
+}

@@ -1,0 +1,22 @@
+{
+  "id": "cli:workspace:create",
+  "result": {
+    "type": "workspace_created",
+    "workspace": {
+      "workspace_id": "wM",
+      "label": "canvas-orchestra",
+      "active_tab_id": "wM:t1",
+      "pane_count": 1,
+      "tab_count": 1,
+      "number": 17
+    },
+    "root_pane": {
+      "pane_id": "wM:p1",
+      "workspace_id": "wM",
+      "tab_id": "wM:t1",
+      "cwd": "/project",
+      "agent_status": "unknown",
+      "focused": false
+    }
+  }
+}

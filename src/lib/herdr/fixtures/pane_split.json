@@ -1,0 +1,14 @@
+{
+  "id": "cli:pane:split",
+  "result": {
+    "type": "pane_info",
+    "pane": {
+      "pane_id": "wM:p2",
+      "workspace_id": "wM",
+      "tab_id": "wM:t1",
+      "cwd": "/project",
+      "agent_status": "unknown",
+      "focused": false
+    }
+  }
+}

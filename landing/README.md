@@ -1,0 +1,39 @@
+# Canvas Orchestra Landing Page
+
+Static marketing site for [Canvas Orchestra](https://github.com/m4har/canvas-terminal-orchestration).
+
+## Local development
+
+```bash
+cd landing
+npm install
+npm run dev
+```
+
+Open http://localhost:5173
+
+## Build
+
+```bash
+npm run build
+npm run preview
+```
+
+## Deploy to Railway
+
+1. Create a new Railway project
+2. Connect this repository
+3. Set **Root Directory** to `landing`
+4. Railway reads `railway.toml` automatically:
+   - **Build:** `npm ci && npm run build`
+   - **Start:** `npx serve dist -s -l $PORT`
+5. Deploy
+
+The `-s` flag enables SPA fallback (all routes serve `index.html`).
+
+## Stack
+
+- Vite 6 + React 19
+- Tailwind CSS 4
+- Geist fonts, Phosphor icons
+- Animated CSS mock of the Auth Refactor demo workflow

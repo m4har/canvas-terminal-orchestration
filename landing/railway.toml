@@ -1,6 +1,7 @@
 [build]
 builder = "nixpacks"
-buildCommand = "npm ci && npm run build"
+# nixpacks.toml pins Node 20 + runs install/build; avoid npm ci EBUSY on cache dir
+buildCommand = "npm install && npm run build"
 
 [deploy]
 startCommand = "npx serve dist -s -l $PORT"

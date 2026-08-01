@@ -24,10 +24,12 @@ npm run preview
 1. Create a new Railway project
 2. Connect this repository
 3. Set **Root Directory** to `landing`
-4. Railway reads `railway.toml` automatically:
-   - **Build:** `npm ci && npm run build`
+4. Railway reads `nixpacks.toml` (Node 20) and `railway.toml`:
+   - **Build:** `npm install && npm run build`
    - **Start:** `npx serve dist -s -l $PORT`
 5. Deploy
+
+Requires **Node 20+** (Tailwind CSS 4 / `@tailwindcss/oxide`).
 
 The `-s` flag enables SPA fallback (all routes serve `index.html`).
 

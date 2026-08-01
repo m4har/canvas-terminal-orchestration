@@ -1,7 +1,12 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
+import { ReactFlowProvider } from "@xyflow/react";
 import { TerminalNode } from "./TerminalNode";
 import { createTerminalNodeData } from "../../../lib/nodes";
+
+function renderWithFlow(ui: React.ReactElement) {
+  return render(<ReactFlowProvider>{ui}</ReactFlowProvider>);
+}
 
 vi.mock("../../terminal/XtermView", () => ({
   XtermView: ({ fallbackText }: { fallbackText?: string }) => (
@@ -17,7 +22,7 @@ describe("TerminalNode", () => {
   afterEach(() => cleanup());
 
   it("renders label with idle status", () => {
-    render(
+    renderWithFlow(
       <TerminalNode
         id="t1"
         type="terminal"
@@ -39,10 +44,12 @@ describe("TerminalNode", () => {
     expect(screen.getByLabelText("idle")).toBeInTheDocument();
     expect(screen.getByText("opencode")).toBeInTheDocument();
     expect(screen.getByTestId("terminal-pane-id")).toHaveTextContent("pane-1");
+    expect(screen.getByTestId("node-handle-source")).toBeInTheDocument();
+    expect(screen.getByTestId("node-handle-target")).toBeInTheDocument();
   });
 
   it("shows output preview", () => {
-    render(
+    renderWithFlow(
       <TerminalNode
         id="t1"
         type="terminal"

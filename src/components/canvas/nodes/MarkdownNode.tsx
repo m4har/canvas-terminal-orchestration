@@ -4,6 +4,7 @@ import { useCanvasStore } from "../../../stores/canvasStore";
 import type { MarkdownNodeData } from "../../../lib/types";
 import { NodeFontSize } from "./NodeFontSize";
 import { NodeSizeResizer } from "./NodeSizeResizer";
+import { SourceHandle } from "./NodeHandles";
 
 export function MarkdownNode({
   id,
@@ -16,6 +17,7 @@ export function MarkdownNode({
 
   return (
     <div className="relative flex h-full min-h-[120px] min-w-[200px] flex-col rounded-md border border-[var(--border)] bg-[var(--node-fill)] shadow-sm">
+      <SourceHandle />
       <NodeSizeResizer selected={!!selected} minWidth={200} minHeight={120} />
 
       <div className="flex items-center gap-2 border-b border-[var(--border)] px-2 py-1.5">

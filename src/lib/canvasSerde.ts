@@ -83,6 +83,9 @@ export function dtoToFlowEdge(dto: CanvasEdgeDto): Edge {
     id: dto.id,
     source: dto.source_node_id,
     target: dto.target_node_id,
+    type: "handoff",
+    label: "handoff",
+    animated: true,
   };
 }
 

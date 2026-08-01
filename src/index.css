@@ -81,3 +81,12 @@ body {
 .xterm-viewport {
   border-radius: 2px;
 }
+
+.react-flow__edge-path {
+  stroke: var(--edge-stroke);
+}
+
+.react-flow__edge.animated path {
+  stroke-dasharray: 5;
+  animation: react-flow__edge-animation 0.5s linear infinite;
+}

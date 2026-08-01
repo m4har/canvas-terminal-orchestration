@@ -75,9 +75,30 @@ export function createDemoWorkflow(): { nodes: Node[]; edges: Edge[] } {
   ];
 
   const edges: Edge[] = [
-    { id: "e-plan-planner", source: "md-plan", target: "term-planner", type: "handoff" },
-    { id: "e-planner-fe", source: "term-planner", target: "term-fe", type: "handoff" },
-    { id: "e-planner-be", source: "term-planner", target: "term-be", type: "handoff" },
+    {
+      id: "e-plan-planner",
+      source: "md-plan",
+      target: "term-planner",
+      type: "handoff",
+      label: "handoff",
+      animated: true,
+    },
+    {
+      id: "e-planner-fe",
+      source: "term-planner",
+      target: "term-fe",
+      type: "handoff",
+      label: "handoff",
+      animated: true,
+    },
+    {
+      id: "e-planner-be",
+      source: "term-planner",
+      target: "term-be",
+      type: "handoff",
+      label: "handoff",
+      animated: true,
+    },
   ];
 
   return { nodes, edges };

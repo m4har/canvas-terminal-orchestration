@@ -5,6 +5,7 @@ import { isRealHerdrPane } from "../../../lib/herdr/dispatch";
 import type { TerminalNodeData } from "../../../lib/types";
 import { XtermView } from "../../terminal/XtermView";
 import { NodeSizeResizer } from "./NodeSizeResizer";
+import { SourceHandle, TargetHandle } from "./NodeHandles";
 import { StatusIcon } from "./StatusIcon";
 
 function PaneIdBadge({ paneId }: { paneId: string }) {
@@ -48,6 +49,8 @@ export function TerminalNode({
         selected ? "ring-1 ring-[var(--ring)]" : ""
       }`}
     >
+      <TargetHandle />
+      <SourceHandle />
       <NodeSizeResizer selected={!!selected} minWidth={240} minHeight={160} />
 
       <div className="flex items-center gap-2 border-b border-[var(--border)] px-2 py-1.5">

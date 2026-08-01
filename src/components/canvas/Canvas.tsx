@@ -9,8 +9,10 @@ import {
 } from "@xyflow/react";
 import { useCallback, useMemo } from "react";
 import { applyCanvasNodeChanges, sortNodesForRender } from "../../lib/nodeDimensions";
+import { canAddHandoffEdge, createHandoffEdge } from "../../lib/edgeRules";
 import { useCanvasStore } from "../../stores/canvasStore";
 import { useTheme } from "../theme/ThemeProvider";
+import { HandoffEdge } from "./edges/HandoffEdge";
 import { HandoffDialog } from "./HandoffDialog";
 import { MarkdownNode } from "./nodes/MarkdownNode";
 import { SquareNode } from "./nodes/SquareNode";
@@ -23,6 +25,10 @@ const nodeTypes = {
   square: SquareNode,
   terminal: TerminalNode,
   markdown: MarkdownNode,
+};
+
+const edgeTypes = {
+  handoff: HandoffEdge,
 };
 
 export function Canvas() {
@@ -54,20 +60,28 @@ export function Canvas() {
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      if (!connection.source || !connection.target) return;
-      setEdges([
-        ...edges,
-        {
-          id: `e-${connection.source}-${connection.target}`,
-          source: connection.source,
-          target: connection.target,
-          type: "default",
-          label: "handoff",
-          animated: true,
-        },
-      ]);
+      const sourceNode = nodes.find((n) => n.id === connection.source);
+      const targetNode = nodes.find((n) => n.id === connection.target);
+      if (!canAddHandoffEdge(connection, edges, sourceNode, targetNode)) return;
+      setEdges([...edges, createHandoffEdge(connection)]);
     },
-    [edges, setEdges]
+    [edges, nodes, setEdges]
+  );
+
+  const isValidConnection = useCallback(
+    (connection: Connection) => {
+      const sourceNode = nodes.find((n) => n.id === connection.source);
+      const targetNode = nodes.find((n) => n.id === connection.target);
+      return canAddHandoffEdge(connection, edges, sourceNode, targetNode);
+    },
+    [edges, nodes]
+  );
+
+  const onEdgeClick = useCallback(
+    (_: unknown, edge: { target: string }) => {
+      openHandoff(edge.target);
+    },
+    [openHandoff]
   );
 
   const onNodeClick = useCallback(
@@ -92,8 +106,12 @@ export function Canvas() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        isValidConnection={isValidConnection}
+        onEdgeClick={onEdgeClick}
         onNodeClick={onNodeClick}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        defaultEdgeOptions={{ type: "handoff" }}
         elevateNodesOnSelect={false}
         fitView
         proOptions={{ hideAttribution: true }}

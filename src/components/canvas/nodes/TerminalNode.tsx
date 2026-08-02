@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { NodeProps } from "@xyflow/react";
 import { useCanvasStore } from "../../../stores/canvasStore";
+import { useTerminalFontSize } from "../../../hooks/useTerminalFontSize";
 import { isRealHerdrPane } from "../../../lib/herdr/dispatch";
 import type { TerminalNodeData } from "../../../lib/types";
 import { XtermView } from "../../terminal/XtermView";
@@ -36,6 +37,7 @@ export function TerminalNode({
   selected,
 }: NodeProps & { data: TerminalNodeData }) {
   const updateTerminal = useCanvasStore((s) => s.updateTerminalNode);
+  const { fontSize } = useTerminalFontSize();
   const [editingLabel, setEditingLabel] = useState(false);
 
   const startEdit = (e: React.MouseEvent) => {
@@ -93,7 +95,9 @@ export function TerminalNode({
         paneId={data.herdrPaneId}
         fallbackText={data.outputPreview || `$ ${data.label}\n`}
         lines={10}
-        className="min-h-0 flex-1 border-t border-[var(--border)] bg-[#0d0d0d] p-1 dark:bg-[#0d0d0d]"
+        fontSize={fontSize}
+        active={!!selected}
+        className="min-h-0 flex-1 border-t border-[var(--border)] bg-transparent p-1"
       />
     </div>
   );

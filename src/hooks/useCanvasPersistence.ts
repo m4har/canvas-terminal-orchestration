@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useCanvasStore } from "../stores/canvasStore";
-import { reconcileTerminalPanes } from "../lib/herdr/dispatch";
+import { isAutomationMode } from "../lib/runtimeFlags";
 import {
   dtoToFlowEdges,
   dtoToFlowNodes,
@@ -28,14 +28,13 @@ export function useCanvasPersistence() {
 
       if (nodeDtos.length > 0) {
         hydrate(dtoToFlowNodes(nodeDtos), dtoToFlowEdges(edgeDtos));
-        void reconcileTerminalPanes(
-          () => useCanvasStore.getState(),
-          (partial) => useCanvasStore.setState(partial)
-        );
       } else {
         loadDemoWorkflow();
       }
       setInitialized(true);
+      if (isAutomationMode()) {
+        document.documentElement.dataset.e2eReady = "true";
+      }
     });
 
     return () => {

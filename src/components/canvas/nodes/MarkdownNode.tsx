@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { NodeProps } from "@xyflow/react";
 import { useCanvasStore } from "../../../stores/canvasStore";
 import type { MarkdownNodeData } from "../../../lib/types";
+import { MarkdownPreview } from "../../markdown/MarkdownPreview";
 import { NodeFontSize } from "./NodeFontSize";
 import { NodeSizeResizer } from "./NodeSizeResizer";
 import { SourceHandle } from "./NodeHandles";
@@ -12,6 +13,7 @@ export function MarkdownNode({
   selected,
 }: NodeProps & { data: MarkdownNodeData }) {
   const updateMarkdown = useCanvasStore((s) => s.updateMarkdownNode);
+  const openMarkdownEditor = useCanvasStore((s) => s.openMarkdownEditor);
   const [editingTitle, setEditingTitle] = useState(false);
   const fontSize = data.fontSize ?? 11;
 
@@ -53,15 +55,19 @@ export function MarkdownNode({
           />
         )}
       </div>
-      <textarea
-        data-testid="markdown-editor"
-        className="nodrag nopan nowheel min-h-0 flex-1 w-full resize-none bg-transparent p-2 font-mono leading-relaxed text-[var(--foreground)] outline-none"
+      <div
+        data-testid="markdown-preview"
+        className="nodrag nopan nowheel min-h-0 flex-1 cursor-pointer overflow-auto p-2"
         style={{ fontSize: `${fontSize}px` }}
-        value={data.content}
         onMouseDown={(e) => e.stopPropagation()}
         onPointerDown={(e) => e.stopPropagation()}
-        onChange={(e) => updateMarkdown(id, { content: e.target.value })}
-      />
+        onClick={(e) => {
+          e.stopPropagation();
+          openMarkdownEditor(id);
+        }}
+      >
+        <MarkdownPreview content={data.content} />
+      </div>
     </div>
   );
 }

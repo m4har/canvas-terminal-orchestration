@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 
+vi.mock("../lib/herdr/connect", () => ({
+  connectHerdr: vi.fn().mockResolvedValue(false),
+  parseHerdrServerStatus: vi.fn(),
+  probeHerdrServer: vi.fn(),
+}));
+
 vi.mock("../lib/herdr/client", () => ({
   herdrStatus: vi.fn().mockResolvedValue(false),
   provisionTerminalPane: vi.fn(),
@@ -7,6 +13,15 @@ vi.mock("../lib/herdr/client", () => ({
   setHerdrRunner: vi.fn(),
   resetHerdrCache: vi.fn(),
 }));
+
+vi.mock("../lib/herdr/dispatch", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../lib/herdr/dispatch")>();
+  return {
+    ...actual,
+    reconcileTerminalPanes: vi.fn().mockResolvedValue(undefined),
+    provisionNodePane: vi.fn().mockResolvedValue(undefined),
+  };
+});
 
 import {
   createSquareFlowNode,
@@ -20,7 +35,9 @@ describe("canvasStore", () => {
       nodes: [],
       edges: [],
       initialized: false,
+      herdrOnline: null,
       handoff: { open: false, targetId: null, payload: "" },
+      markdownEditor: { open: false, nodeId: null },
     });
     vi.useFakeTimers();
   });
@@ -87,6 +104,7 @@ describe("canvasStore", () => {
     useCanvasStore.getState().sendHandoff("implement auth");
     await Promise.resolve();
     await Promise.resolve();
+    await Promise.resolve();
 
     let terminal = useCanvasStore.getState().nodes.find((n) => n.id === "term-planner");
     expect(terminal?.data).toMatchObject({ status: "working" });
@@ -97,9 +115,47 @@ describe("canvasStore", () => {
     expect(terminal?.data).toMatchObject({ status: "done" });
   });
 
+  it("opens markdown editor for markdown node", () => {
+    useCanvasStore.getState().addMarkdownNode("Plan");
+    const mdId = useCanvasStore.getState().nodes.find((n) => n.type === "markdown")!.id;
+
+    useCanvasStore.getState().openMarkdownEditor(mdId);
+
+    expect(useCanvasStore.getState().markdownEditor).toEqual({
+      open: true,
+      nodeId: mdId,
+    });
+  });
+
+  it("does not open markdown editor for non-markdown node", () => {
+    useCanvasStore.getState().addTerminalNode("Planner");
+    const termId = useCanvasStore.getState().nodes.find((n) => n.type === "terminal")!.id;
+
+    useCanvasStore.getState().openMarkdownEditor(termId);
+
+    expect(useCanvasStore.getState().markdownEditor).toEqual({
+      open: false,
+      nodeId: null,
+    });
+  });
+
+  it("closes markdown editor", () => {
+    useCanvasStore.getState().addMarkdownNode("Plan");
+    const mdId = useCanvasStore.getState().nodes.find((n) => n.type === "markdown")!.id;
+    useCanvasStore.getState().openMarkdownEditor(mdId);
+
+    useCanvasStore.getState().closeMarkdownEditor();
+
+    expect(useCanvasStore.getState().markdownEditor).toEqual({
+      open: false,
+      nodeId: null,
+    });
+  });
+
   it("runParallelFanOut dispatches to fe and be", async () => {
     useCanvasStore.getState().loadDemoWorkflow();
     useCanvasStore.getState().runParallelFanOut();
+    await Promise.resolve();
     await Promise.resolve();
     await Promise.resolve();
 

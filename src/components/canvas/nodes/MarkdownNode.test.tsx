@@ -15,16 +15,42 @@ vi.mock("../../../stores/canvasStore", () => ({
 
 describe("MarkdownNode", () => {
   const updateMarkdownNode = vi.fn();
+  const openMarkdownEditor = vi.fn();
 
   beforeEach(() => {
     cleanup();
     vi.mocked(useCanvasStore).mockImplementation((selector) =>
-      selector({ updateMarkdownNode } as never)
+      selector({ updateMarkdownNode, openMarkdownEditor } as never)
     );
     updateMarkdownNode.mockClear();
+    openMarkdownEditor.mockClear();
   });
 
-  it("renders title and editable content", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("renders title and markdown preview", () => {
+    renderWithFlow(
+      <MarkdownNode
+        id="md-1"
+        type="markdown"
+        selected={false}
+        dragging={false}
+        zIndex={0}
+        positionAbsoluteX={0}
+        positionAbsoluteY={0}
+        data={createMarkdownNodeData({ title: "Plan", content: "# Hello\n\n- item one" })}
+      />
+    );
+
+    expect(screen.getByText("Plan")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Hello" })).toBeInTheDocument();
+    expect(screen.getByText("item one")).toBeInTheDocument();
+    expect(screen.getByTestId("node-handle-source")).toBeInTheDocument();
+  });
+
+  it("opens markdown editor when clicking preview area", () => {
     renderWithFlow(
       <MarkdownNode
         id="md-1"
@@ -38,29 +64,8 @@ describe("MarkdownNode", () => {
       />
     );
 
-    expect(screen.getByText("Plan")).toBeInTheDocument();
-    expect(screen.getByDisplayValue("# Hello")).toBeInTheDocument();
-    expect(screen.getByTestId("node-handle-source")).toBeInTheDocument();
-  });
+    fireEvent.click(screen.getByTestId("markdown-preview"));
 
-  it("calls updateMarkdownNode on edit", () => {
-    renderWithFlow(
-      <MarkdownNode
-        id="md-1"
-        type="markdown"
-        selected={false}
-        dragging={false}
-        zIndex={0}
-        positionAbsoluteX={0}
-        positionAbsoluteY={0}
-        data={createMarkdownNodeData({ title: "Plan", content: "old" })}
-      />
-    );
-
-    fireEvent.change(screen.getByTestId("markdown-editor"), {
-      target: { value: "new content" },
-    });
-
-    expect(updateMarkdownNode).toHaveBeenCalledWith("md-1", { content: "new content" });
+    expect(openMarkdownEditor).toHaveBeenCalledWith("md-1");
   });
 });

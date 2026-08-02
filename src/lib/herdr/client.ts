@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { isTauriRuntime } from "../workflow";
+import { parseHerdrServerStatus } from "./connect";
 import { normalizeAgentStatus, parseHerdrJson, tailLines } from "./parse";
 import type {
   AgentListResult,
@@ -16,6 +17,8 @@ export type HerdrRunner = (args: string[]) => Promise<string>;
 
 let runner: HerdrRunner | null = null;
 let workspaceCache: { workspaceId: string; rootPaneId: string } | null = null;
+let ensureCanvasWorkspacePromise: Promise<{ workspaceId: string; rootPaneId: string }> | null =
+  null;
 
 async function defaultRunner(args: string[]): Promise<string> {
   if (isTauriRuntime()) {
@@ -35,6 +38,7 @@ async function defaultRunner(args: string[]): Promise<string> {
 export function setHerdrRunner(next: HerdrRunner | null) {
   runner = next;
   workspaceCache = null;
+  ensureCanvasWorkspacePromise = null;
 }
 
 function getRunner(): HerdrRunner {
@@ -48,8 +52,7 @@ export async function herdrRun(args: string[]): Promise<string> {
 export async function herdrStatus(): Promise<boolean> {
   try {
     const out = await herdrRun(["status", "server", "--json"]);
-    const parsed = JSON.parse(out.trim()) as { status?: string };
-    return parsed.status === "running";
+    return parseHerdrServerStatus(out);
   } catch {
     return false;
   }
@@ -75,27 +78,34 @@ export async function createWorkspace(cwd: string, label = CANVAS_WORKSPACE_LABE
 
 export async function ensureCanvasWorkspace(cwd: string) {
   if (workspaceCache) return workspaceCache;
+  if (ensureCanvasWorkspacePromise) return ensureCanvasWorkspacePromise;
 
-  const list = await listWorkspaces();
-  const existing = list.workspaces.find((w) => w.label === CANVAS_WORKSPACE_LABEL);
-  if (existing) {
-    const panes = await listPanes();
-    const wsPanes = panes.filter((p) => p.workspace_id === existing.workspace_id);
-    const root = wsPanes.sort((a, b) => a.pane_id.localeCompare(b.pane_id))[0];
-    if (!root) throw new Error("herdr: workspace has no panes");
+  ensureCanvasWorkspacePromise = (async () => {
+    const list = await listWorkspaces();
+    const existing = list.workspaces.find((w) => w.label === CANVAS_WORKSPACE_LABEL);
+    if (existing) {
+      const panes = await listPanes();
+      const wsPanes = panes.filter((p) => p.workspace_id === existing.workspace_id);
+      const root = wsPanes.sort((a, b) => a.pane_id.localeCompare(b.pane_id))[0];
+      if (!root) throw new Error("herdr: workspace has no panes");
+      workspaceCache = {
+        workspaceId: existing.workspace_id,
+        rootPaneId: root.pane_id,
+      };
+      return workspaceCache;
+    }
+
+    const created = await createWorkspace(cwd);
     workspaceCache = {
-      workspaceId: existing.workspace_id,
-      rootPaneId: root.pane_id,
+      workspaceId: created.workspace.workspace_id,
+      rootPaneId: created.root_pane.pane_id,
     };
     return workspaceCache;
-  }
+  })().finally(() => {
+    ensureCanvasWorkspacePromise = null;
+  });
 
-  const created = await createWorkspace(cwd);
-  workspaceCache = {
-    workspaceId: created.workspace.workspace_id,
-    rootPaneId: created.root_pane.pane_id,
-  };
-  return workspaceCache;
+  return ensureCanvasWorkspacePromise;
 }
 
 export async function splitPane(
@@ -136,7 +146,7 @@ export async function readPaneAnsi(paneId: string, lines = 24): Promise<string> 
     "--source",
     "visible",
     "--format",
-    "text",
+    "ansi",
   ]);
   return out;
 }
@@ -189,4 +199,5 @@ export async function dispatchToPane(
 
 export function resetHerdrCache() {
   workspaceCache = null;
+  ensureCanvasWorkspacePromise = null;
 }

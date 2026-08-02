@@ -4,6 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { herdrApiPlugin } from "./vite-plugin-herdr";
 
 const host = process.env.TAURI_DEV_HOST;
+const e2eDev = process.env.E2E === "1";
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), herdrApiPlugin()],
@@ -12,13 +13,15 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
     host: host || false,
-    hmr: host
-      ? {
-          protocol: "ws",
-          host,
-          port: 1421,
-        }
-      : undefined,
+    hmr: e2eDev
+      ? false
+      : host
+        ? {
+            protocol: "ws",
+            host,
+            port: 1421,
+          }
+        : undefined,
     watch: {
       ignored: ["**/src-tauri/**"],
     },

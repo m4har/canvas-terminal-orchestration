@@ -12,6 +12,7 @@ import {
 } from "@phosphor-icons/react";
 import { useReactFlow } from "@xyflow/react";
 import { useTheme } from "../theme/ThemeProvider";
+import { useTerminalFontSize, TERMINAL_FONT_SIZES } from "../../hooks/useTerminalFontSize";
 import { useCanvasStore } from "../../stores/canvasStore";
 import { HerdrStatusBadge } from "./HerdrStatusBadge";
 
@@ -24,6 +25,7 @@ export function CanvasToolbar() {
   const openHandoff = useCanvasStore((state) => state.openHandoff);
   const runParallelFanOut = useCanvasStore((state) => state.runParallelFanOut);
   const { resolved, toggleTheme } = useTheme();
+  const { fontSize, setFontSize } = useTerminalFontSize();
   const { fitView } = useReactFlow();
 
   return (
@@ -73,6 +75,23 @@ export function CanvasToolbar() {
       <ToolbarButton label="Fit view" onClick={() => fitView({ padding: 0.2 })}>
         <ArrowsOut size={16} weight="regular" />
       </ToolbarButton>
+
+      <label className="flex items-center gap-1 text-[10px] text-[var(--muted-foreground)]">
+        <span className="hidden sm:inline">Terminal</span>
+        <select
+          data-testid="terminal-font-size"
+          aria-label="Terminal font size"
+          className="rounded border border-[var(--border)] bg-[var(--muted)] px-1 py-0.5 text-[10px] text-[var(--foreground)]"
+          value={fontSize}
+          onChange={(e) => setFontSize(Number(e.target.value) as typeof fontSize)}
+        >
+          {TERMINAL_FONT_SIZES.map((size) => (
+            <option key={size} value={size}>
+              {size}px
+            </option>
+          ))}
+        </select>
+      </label>
 
       <ToolbarButton label="Toggle theme" onClick={toggleTheme}>
         {resolved === "dark" ? (

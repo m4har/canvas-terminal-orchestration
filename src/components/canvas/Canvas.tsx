@@ -14,11 +14,12 @@ import { useCanvasStore } from "../../stores/canvasStore";
 import { useTheme } from "../theme/ThemeProvider";
 import { HandoffEdge } from "./edges/HandoffEdge";
 import { HandoffDialog } from "./HandoffDialog";
+import { MarkdownEditorDialog } from "../markdown/MarkdownEditorDialog";
 import { MarkdownNode } from "./nodes/MarkdownNode";
 import { SquareNode } from "./nodes/SquareNode";
 import { TerminalNode } from "./nodes/TerminalNode";
 import { TextNode } from "./nodes/TextNode";
-import type { TerminalNodeData } from "../../lib/types";
+import type { MarkdownNodeData, TerminalNodeData } from "../../lib/types";
 
 const nodeTypes = {
   text: TextNode,
@@ -36,11 +37,14 @@ export function Canvas() {
   const nodes = useCanvasStore((state) => state.nodes);
   const edges = useCanvasStore((state) => state.edges);
   const handoff = useCanvasStore((state) => state.handoff);
+  const markdownEditor = useCanvasStore((state) => state.markdownEditor);
   const setNodes = useCanvasStore((state) => state.setNodes);
   const setEdges = useCanvasStore((state) => state.setEdges);
   const openHandoff = useCanvasStore((state) => state.openHandoff);
   const closeHandoff = useCanvasStore((state) => state.closeHandoff);
   const sendHandoff = useCanvasStore((state) => state.sendHandoff);
+  const closeMarkdownEditor = useCanvasStore((state) => state.closeMarkdownEditor);
+  const updateMarkdownNode = useCanvasStore((state) => state.updateMarkdownNode);
 
   const renderNodes = useMemo(() => sortNodesForRender(nodes), [nodes]);
 
@@ -97,6 +101,12 @@ export function Canvas() {
       ? (targetNode.data as TerminalNodeData).label
       : "pane";
 
+  const editingMarkdownNode = nodes.find((n) => n.id === markdownEditor.nodeId);
+  const editingMarkdownData =
+    editingMarkdownNode?.type === "markdown"
+      ? (editingMarkdownNode.data as MarkdownNodeData)
+      : null;
+
   return (
     <div className="h-full min-h-0 w-full bg-[var(--canvas-bg)]">
       <ReactFlow
@@ -121,12 +131,25 @@ export function Canvas() {
       </ReactFlow>
 
       <HandoffDialog
-        key={handoff.targetId ?? "closed"}
+        key={`handoff-${handoff.targetId ?? "closed"}`}
         open={handoff.open}
         targetLabel={targetLabel}
         payload={handoff.payload}
         onClose={closeHandoff}
         onSend={sendHandoff}
+      />
+
+      <MarkdownEditorDialog
+        key={`markdown-${markdownEditor.nodeId ?? "closed"}`}
+        open={markdownEditor.open}
+        title={editingMarkdownData?.title ?? "Spec"}
+        content={editingMarkdownData?.content ?? ""}
+        onClose={closeMarkdownEditor}
+        onChange={(content) => {
+          if (markdownEditor.nodeId) {
+            updateMarkdownNode(markdownEditor.nodeId, { content });
+          }
+        }}
       />
     </div>
   );

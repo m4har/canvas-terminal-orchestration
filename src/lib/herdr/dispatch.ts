@@ -4,11 +4,14 @@ import {
   herdrStatus,
   provisionTerminalPane,
 } from "./client";
+import { connectHerdr } from "./connect";
 import { getProjectCwd } from "./env";
+import { isAutomationMode } from "../runtimeFlags";
 import type { TerminalNodeData } from "../types";
 
 let herdrAvailable: boolean | null = null;
 let herdrCheckedAt = 0;
+let reconcilePromise: Promise<void> | null = null;
 const HERDR_CACHE_MS = 3000;
 
 export function resetHerdrState() {
@@ -24,6 +27,9 @@ export async function checkHerdrAvailable(force = false) {
   const stale = Date.now() - herdrCheckedAt > HERDR_CACHE_MS;
   if (!force && herdrAvailable !== null && !stale) {
     return herdrAvailable;
+  }
+  if (force || herdrAvailable !== true) {
+    await connectHerdr();
   }
   herdrAvailable = await herdrStatus();
   herdrCheckedAt = Date.now();
@@ -74,15 +80,22 @@ export async function reconcileTerminalPanes(
   get: GetState<CanvasSlice>,
   set: SetState<CanvasSlice>
 ) {
-  const terminals = get().nodes.filter((n) => n.type === "terminal");
-  await Promise.all(
-    terminals.map(async (node) => {
+  if (isAutomationMode()) return;
+  if (reconcilePromise) return reconcilePromise;
+
+  reconcilePromise = (async () => {
+    const terminals = get().nodes.filter((n) => n.type === "terminal");
+    for (const node of terminals) {
       const data = node.data as TerminalNodeData;
       if (!isRealHerdrPane(data.herdrPaneId)) {
         await provisionNodePane(get, set, node.id);
       }
-    })
-  );
+    }
+  })().finally(() => {
+    reconcilePromise = null;
+  });
+
+  return reconcilePromise;
 }
 
 export function simulateAgentRun(

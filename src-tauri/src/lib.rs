@@ -27,6 +27,7 @@ pub fn run() {
             commands::workflow::load_canvas,
             commands::workflow::save_canvas,
             commands::herdr::herdr_run,
+            commands::herdr::herdr_connect,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

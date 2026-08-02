@@ -31,12 +31,19 @@ interface HandoffState {
   payload: string;
 }
 
+interface MarkdownEditorState {
+  open: boolean;
+  nodeId: string | null;
+}
+
 interface CanvasState {
   workflowId: string;
   nodes: Node[];
   edges: Edge[];
   initialized: boolean;
+  herdrOnline: boolean | null;
   handoff: HandoffState;
+  markdownEditor: MarkdownEditorState;
   addTextNode: (label?: string, fontSize?: number) => void;
   addSquareNode: (width?: number, height?: number) => void;
   addTerminalNode: (label?: string, agentKind?: string) => void;
@@ -50,11 +57,14 @@ interface CanvasState {
   runParallelFanOut: () => void;
   closeHandoff: () => void;
   sendHandoff: (text: string) => void;
+  openMarkdownEditor: (nodeId: string) => void;
+  closeMarkdownEditor: () => void;
   forceDone: (terminalId: string) => void;
   setNodes: (nodes: Node[]) => void;
   setEdges: (edges: Edge[]) => void;
   hydrate: (nodes: Node[], edges: Edge[]) => void;
   setInitialized: (value: boolean) => void;
+  setHerdrOnline: (value: boolean | null) => void;
 }
 
 export function createTextFlowNode(
@@ -124,7 +134,9 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   nodes: [],
   edges: [],
   initialized: false,
+  herdrOnline: null,
   handoff: { open: false, targetId: null, payload: "" },
+  markdownEditor: { open: false, nodeId: null },
 
   addTextNode: (label = "Label", fontSize = 18) => {
     const offset = get().nodes.length * 24;
@@ -218,7 +230,12 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     const { nodes, edges } = createDemoWorkflow();
     nodeCounter = 10;
     paneCounter = 3;
-    set({ nodes, edges, handoff: { open: false, targetId: null, payload: "" } });
+    set({
+      nodes,
+      edges,
+      handoff: { open: false, targetId: null, payload: "" },
+      markdownEditor: { open: false, nodeId: null },
+    });
   },
 
   openHandoff: (targetId) => {
@@ -251,6 +268,16 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     set({ handoff: { open: false, targetId: null, payload: "" } });
   },
 
+  openMarkdownEditor: (nodeId) => {
+    const node = get().nodes.find((n) => n.id === nodeId);
+    if (!node || node.type !== "markdown") return;
+    set({ markdownEditor: { open: true, nodeId } });
+  },
+
+  closeMarkdownEditor: () => {
+    set({ markdownEditor: { open: false, nodeId: null } });
+  },
+
   sendHandoff: (text) => {
     const { targetId } = get().handoff;
     if (!targetId) return;
@@ -269,4 +296,6 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   hydrate: (nodes, edges) => set({ nodes, edges }),
 
   setInitialized: (value) => set({ initialized: value }),
+
+  setHerdrOnline: (value) => set({ herdrOnline: value }),
 }));

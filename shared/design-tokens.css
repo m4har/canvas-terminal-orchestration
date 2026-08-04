@@ -1,0 +1,57 @@
+/**
+ * Canvas Orchestra design tokens — Cobalt + Cream
+ * Imported by landing/ and src/ (desktop app).
+ */
+:root {
+  --background: oklch(0.98 0.008 250);
+  --foreground: oklch(0.22 0.02 250);
+  --muted: oklch(0.96 0.012 250);
+  --muted-foreground: oklch(0.5 0.02 250);
+  --border: oklch(0.9 0.015 250);
+  --canvas-bg: oklch(0.985 0.006 250);
+  --canvas-dot: oklch(0.82 0.02 250);
+  --node-fill: oklch(0.97 0.01 250);
+  --node-hover: oklch(0.94 0.015 250);
+  --edge-stroke: oklch(0.58 0.12 255);
+  --ring: oklch(0.52 0.17 255);
+  --accent: oklch(0.52 0.17 255);
+  --accent-foreground: oklch(0.99 0.005 250);
+  --accent-muted: oklch(0.94 0.03 255);
+  --success: oklch(0.55 0.14 145);
+  --warning: oklch(0.72 0.13 85);
+  --status-idle: oklch(0.5 0.02 250);
+  --status-working: var(--accent);
+  --status-blocked: var(--warning);
+  --status-done: var(--success);
+  --grid-line: oklch(0.82 0.02 250 / 0.5);
+  --glass-border: oklch(0.52 0.17 255 / 0.15);
+  --glass-highlight: oklch(1 0 0 / 0.6);
+  --glass-bg: oklch(1 0 0 / 0.72);
+}
+
+.dark {
+  --background: oklch(0.145 0.01 250);
+  --foreground: oklch(0.985 0.005 250);
+  --muted: oklch(0.24 0.015 250);
+  --muted-foreground: oklch(0.65 0.02 250);
+  --border: oklch(0.28 0.015 250);
+  --canvas-bg: oklch(0.145 0.01 250);
+  --canvas-dot: oklch(0.32 0.02 250);
+  --node-fill: oklch(0.24 0.015 250);
+  --node-hover: oklch(0.3 0.02 250);
+  --edge-stroke: oklch(0.55 0.1 255);
+  --ring: oklch(0.62 0.15 255);
+  --accent: oklch(0.62 0.15 255);
+  --accent-foreground: oklch(0.99 0.005 250);
+  --accent-muted: oklch(0.25 0.04 255);
+  --success: oklch(0.65 0.14 145);
+  --warning: oklch(0.78 0.12 85);
+  --status-idle: oklch(0.65 0.02 250);
+  --status-working: var(--accent);
+  --status-blocked: var(--warning);
+  --status-done: var(--success);
+  --grid-line: oklch(0.32 0.02 250 / 0.45);
+  --glass-border: oklch(1 0 0 / 0.08);
+  --glass-highlight: oklch(1 0 0 / 0.04);
+  --glass-bg: oklch(0.16 0.01 250 / 0.65);
+}

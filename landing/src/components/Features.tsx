@@ -7,7 +7,7 @@ const FEATURES = [
     tag: "Supervision",
     title: "Visual Supervision",
     description:
-      "All agent statuses on one screen. TerminalNode badges show idle, working, blocked, and done — polled every 2 seconds from Herdr.",
+      "All agent statuses on one screen. TerminalNode badges show idle, working, blocked, and done, polled every 2 seconds from Herdr.",
     span: "lg:col-span-7",
   },
   {
@@ -23,7 +23,7 @@ const FEATURES = [
     tag: "Layout",
     title: "Project Grouping",
     description:
-      "Square frames and Text headers organize parallel work. Interior is click-through — only the border stroke is draggable.",
+      "Square frames and Text headers organize parallel work. Interior is click-through; only the border stroke is draggable.",
     span: "lg:col-span-5",
   },
   {
@@ -62,7 +62,7 @@ export function Features() {
         <Stagger className="grid grid-cols-1 gap-4 lg:grid-cols-12" stagger={0.12}>
           {FEATURES.map(({ icon: Icon, tag, title, description, span }) => (
             <StaggerItem key={title} className={span}>
-              <div className="group glass-panel h-full rounded-[1.5rem] p-8 transition-transform duration-300 hover:-translate-y-1">
+              <div className="group glass-panel h-full rounded-[1.5rem] p-8 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--accent)]/30">
                 <div className="flex items-start justify-between">
                   <Icon
                     size={22}

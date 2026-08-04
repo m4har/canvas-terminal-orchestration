@@ -361,7 +361,7 @@ Single workflow, auto-saved to SQLite on every change.
 
 ### 15.1 Design Direction
 
-**Minimalist modern** developer tool with **dark mode support**. Monochrome palette — hierarchy through weight, opacity, and border, not color. Canvas-first layout with minimal chrome.
+**Minimalist modern** developer tool with **light/dark mode support**. Cobalt + Cream palette with semantic status colors. Canvas-first layout with minimal chrome. Shared tokens in [`shared/design-tokens.css`](../shared/design-tokens.css) (see ADR 0002).
 
 | Dial | Value | Rationale |
 |------|-------|-----------|
@@ -369,7 +369,7 @@ Single workflow, auto-saved to SQLite on every change.
 | MOTION_INTENSITY | 4 | Subtle CSS transitions; one infinite spin for `working` status |
 | VISUAL_DENSITY | 4 | Airy spacing; gallery-like breathing room around nodes |
 
-**Anti-patterns (banned):** purple/blue AI gradient aesthetic, Inter font, emoji in UI, colored accent buttons, card shadows on every element, `h-screen` (use `min-h-[100dvh]`), neon glows, pure `#000000`.
+**Anti-patterns (banned):** purple AI gradient aesthetic, Inter font, emoji in UI, card shadows on every element, `h-screen` (use `min-h-[100dvh]`), neon glows, pure `#000000`.
 
 ### 15.2 Theme
 
@@ -382,23 +382,26 @@ Single workflow, auto-saved to SQLite on every change.
 | Implementation | shadcn `ThemeProvider` pattern (class-based `.dark`) |
 | Canvas | Uses theme-adaptive CSS custom properties |
 
-**Color palette:** Monochrome zinc scale. No accent color.
+**Color palette:** Cobalt + Cream (oklch). Single cobalt accent; semantic colors for agent status. Landing and app share `shared/design-tokens.css`.
 
 | Token | Light | Dark | Usage |
 |-------|-------|------|-------|
-| `--background` | `zinc-50` | `zinc-950` | App background |
-| `--foreground` | `zinc-900` | `zinc-50` | Primary text |
-| `--muted` | `zinc-100` | `zinc-800` | Node fill, secondary surfaces |
-| `--muted-foreground` | `zinc-500` | `zinc-400` | Secondary text, icons |
-| `--border` | `zinc-200` | `zinc-800` | Dividers, subtle borders |
-| `--canvas-bg` | `zinc-50` | `zinc-950` | Canvas background |
-| `--canvas-dot` | `zinc-300` | `zinc-700` | Dot grid (opacity 0.5) |
-| `--node-fill` | `zinc-100` | `zinc-800` | Node background |
-| `--node-hover` | `zinc-200` | `zinc-750` | Node hover state |
-| `--edge-stroke` | `zinc-400` | `zinc-500` | Edge lines |
-| `--ring` | `zinc-400` | `zinc-500` | Selected node focus ring |
-
-No chroma anywhere in chrome UI. Status uses icons only.
+| `--background` | cream | zinc-950 | App / page background |
+| `--foreground` | ink | zinc-50 | Primary text |
+| `--accent` | cobalt | cobalt (lighter) | CTAs, links, working state |
+| `--accent-muted` | light cobalt wash | dark cobalt wash | Badges, hover backgrounds |
+| `--muted` | cream-muted | zinc-800 | Node fill, secondary surfaces |
+| `--muted-foreground` | zinc-500 | zinc-400 | Secondary text, icons |
+| `--border` | zinc-200 | zinc-800 | Dividers, subtle borders |
+| `--canvas-bg` | cream | zinc-950 | Canvas background |
+| `--canvas-dot` | zinc-300 | zinc-700 | Dot grid |
+| `--node-fill` | cream-muted | zinc-800 | Node background |
+| `--edge-stroke` | cobalt-muted | zinc-500 | Handoff edge lines |
+| `--ring` | cobalt | cobalt | Selected node focus ring |
+| `--status-working` | `--accent` | `--accent` | Working agent icon |
+| `--status-done` | green | green | Done agent icon |
+| `--status-blocked` | amber | amber | Blocked agent icon |
+| `--status-idle` | muted | muted | Idle agent icon |
 
 ### 15.3 Typography
 
@@ -449,16 +452,16 @@ Classic IDE split. Canvas is the primary surface.
 | Theme | `Sun` / `Moon` | Toggle light/dark/system |
 | Handoff | `ArrowRight` | Enter handoff mode |
 
-### 15.5 Agent Status (Icon-Only)
+### 15.5 Agent Status (Icon + Semantic Color)
 
-No colored dots. Differentiation via Phosphor icon shape + motion.
+Differentiation via Phosphor icon shape, motion, and semantic color tokens. No colored dots.
 
-| Status | Icon | Style |
-|--------|------|-------|
-| `idle` | `Minus` | Static, `text-zinc-400` |
-| `working` | `CircleNotch` | Spin animation, `text-zinc-300` |
-| `blocked` | `Pause` | Static, `text-zinc-400` |
-| `done` | `Check` | Static, `text-zinc-300` |
+| Status | Icon | Color token |
+|--------|------|-------------|
+| `idle` | `Minus` | `--status-idle` |
+| `working` | `CircleNotch` | `--status-working` (spin) |
+| `blocked` | `Pause` | `--status-blocked` |
+| `done` | `Check` | `--status-done` |
 
 Icon stroke width: `1.5` globally.
 

@@ -8,7 +8,6 @@ export function Hero() {
   return (
     <section className="relative min-h-[100dvh] overflow-hidden pt-28 pb-16">
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 lg:grid-cols-2 lg:gap-16 lg:px-8">
-        {/* Left — asymmetric content */}
         <div className="flex flex-col justify-center">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -56,14 +55,14 @@ export function Hero() {
               href={GITHUB_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-primary inline-flex items-center gap-2 rounded-xl bg-[var(--foreground)] px-5 py-3 text-sm font-medium text-[var(--background)]"
+              className="btn-primary inline-flex items-center gap-2 rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-medium text-[var(--accent-foreground)]"
             >
               <GithubLogo size={18} weight="fill" />
               View on GitHub
             </a>
             <a
               href="#demo"
-              className="inline-flex items-center gap-1.5 text-sm text-[var(--muted-foreground)] transition-colors hover:text-[var(--foreground)]"
+              className="inline-flex items-center gap-1.5 text-sm text-[var(--muted-foreground)] transition-colors hover:text-[var(--accent)]"
             >
               Watch demo
               <ArrowRight size={14} />
@@ -85,7 +84,7 @@ export function Hero() {
                 <dt className="font-mono text-[10px] uppercase tracking-widest text-[var(--muted-foreground)]">
                   {label}
                 </dt>
-                <dd className="mt-1 font-mono text-2xl font-medium tracking-tight">
+                <dd className="mt-1 font-mono text-2xl font-medium tracking-tight text-[var(--accent)]">
                   {value}
                 </dd>
               </div>
@@ -93,7 +92,6 @@ export function Hero() {
           </motion.dl>
         </div>
 
-        {/* Right — floating preview card */}
         <motion.div
           initial={{ opacity: 0, y: 40, rotateX: 8 }}
           animate={{ opacity: 1, y: 0, rotateX: 0 }}
@@ -153,10 +151,10 @@ function HeroMiniCanvas() {
             <span
               className={`h-1.5 w-1.5 rounded-full ${
                 n.status === "working"
-                  ? "bg-[var(--accent)] animate-pulse-ring"
+                  ? "bg-[var(--status-working)] animate-pulse-ring"
                   : n.status === "done"
-                    ? "bg-[var(--foreground)]"
-                    : "bg-[var(--muted-foreground)]"
+                    ? "bg-[var(--status-done)]"
+                    : "bg-[var(--status-idle)]"
               }`}
             />
             <span className="text-[9px] font-medium">{n.label}</span>

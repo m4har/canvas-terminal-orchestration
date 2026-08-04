@@ -81,7 +81,7 @@ function LiveStatusList() {
                 s.state === "working"
                   ? "bg-[var(--accent)]/20 text-[var(--accent)]"
                   : s.state === "done"
-                    ? "text-[var(--foreground)]"
+                    ? "bg-[var(--success)]/15 text-[var(--success)]"
                     : "text-[var(--muted-foreground)]"
               }`}
             >
@@ -111,7 +111,7 @@ function MetricTicker() {
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 8 }}
-        className="font-mono text-4xl font-medium tracking-tighter"
+        className="font-mono text-4xl font-medium tracking-tighter text-[var(--accent)]"
       >
         {count.toLocaleString()}
       </motion.span>

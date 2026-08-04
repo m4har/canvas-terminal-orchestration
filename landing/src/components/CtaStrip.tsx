@@ -14,10 +14,7 @@ export function CtaStrip() {
 
             <div className="relative grid grid-cols-1 items-center gap-8 md:grid-cols-2">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--accent)]">
-                  Open source
-                </p>
-                <h2 className="mt-3 text-3xl font-semibold tracking-tighter md:text-4xl">
+                <h2 className="text-3xl font-semibold tracking-tighter md:text-4xl">
                   Ready to orchestrate
                   <br />
                   your agents?
@@ -33,7 +30,7 @@ export function CtaStrip() {
                   href={GITHUB_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-primary inline-flex items-center gap-2.5 rounded-xl bg-[var(--foreground)] px-6 py-3.5 text-sm font-medium text-[var(--background)]"
+                  className="btn-primary inline-flex items-center gap-2.5 rounded-xl bg-[var(--accent)] px-6 py-3.5 text-sm font-medium text-[var(--accent-foreground)]"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ type: "spring", stiffness: 400, damping: 20 }}

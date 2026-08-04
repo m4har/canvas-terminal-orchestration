@@ -1,3 +1,4 @@
+import { LandingThemeProvider } from "./components/theme/LandingThemeProvider";
 import { MeshBackground } from "./components/MeshBackground";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
@@ -11,7 +12,7 @@ import { Footer } from "./components/Footer";
 
 export function App() {
   return (
-    <>
+    <LandingThemeProvider>
       <MeshBackground />
       <Navbar />
       <main>
@@ -24,6 +25,6 @@ export function App() {
         <CtaStrip />
       </main>
       <Footer />
-    </>
+    </LandingThemeProvider>
   );
 }

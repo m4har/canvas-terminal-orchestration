@@ -14,15 +14,21 @@ export function StatusIcon({ status }: { status: AgentStatus }) {
       return (
         <CircleNotch
           size={ICON}
-          className="animate-spin text-[var(--foreground)]"
+          className="animate-spin text-[var(--status-working)]"
           aria-label="working"
         />
       );
     case "blocked":
-      return <Pause size={ICON} className="text-yellow-500" aria-label="blocked" />;
+      return (
+        <Pause size={ICON} className="text-[var(--status-blocked)]" aria-label="blocked" />
+      );
     case "done":
-      return <Check size={ICON} className="text-green-500" aria-label="done" />;
+      return (
+        <Check size={ICON} className="text-[var(--status-done)]" aria-label="done" />
+      );
     default:
-      return <Minus size={ICON} className="text-[var(--muted-foreground)]" aria-label="idle" />;
+      return (
+        <Minus size={ICON} className="text-[var(--status-idle)]" aria-label="idle" />
+      );
   }
 }

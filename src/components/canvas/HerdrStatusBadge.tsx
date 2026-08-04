@@ -18,7 +18,7 @@ export function HerdrStatusBadge() {
       onClick={() => void refreshHerdrConnection()}
     >
       <span
-        className={`inline-block h-1.5 w-1.5 rounded-full ${online ? "bg-emerald-500" : "bg-amber-500"}`}
+        className={`inline-block h-1.5 w-1.5 rounded-full ${online ? "bg-[var(--success)]" : "bg-[var(--warning)]"}`}
       />
       <span className="text-[var(--muted-foreground)]">
         herdr {online ? "on" : "off"}

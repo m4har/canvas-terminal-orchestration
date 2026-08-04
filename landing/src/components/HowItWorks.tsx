@@ -36,10 +36,7 @@ export function HowItWorks() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <Reveal>
           <div className="mb-14">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--accent)]">
-              Workflow
-            </p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tighter md:text-4xl">
+            <h2 className="text-3xl font-semibold tracking-tighter md:text-4xl">
               Three moves to
               <br />
               orchestrate

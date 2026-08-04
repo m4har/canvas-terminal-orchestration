@@ -119,7 +119,7 @@ function ToolbarButton({
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--muted-foreground)] transition-colors hover:bg-[var(--muted)] hover:text-[var(--foreground)] active:scale-[0.98]"
+      className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--muted-foreground)] transition-colors hover:bg-[var(--accent-muted)] hover:text-[var(--accent)] active:scale-[0.98]"
     >
       {children}
     </button>

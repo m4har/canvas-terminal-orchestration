@@ -41,14 +41,11 @@ export function MockCanvas() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <Reveal>
           <div className="mb-10 max-w-xl">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--accent)]">
-              Live simulation
-            </p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-tighter md:text-4xl">
+            <h2 className="text-3xl font-semibold tracking-tighter md:text-4xl">
               Auth Refactor workflow
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-[var(--muted-foreground)]">
-              A real layout from the demo canvas — status badges cycle, terminal
+              A real layout from the demo canvas. Status badges cycle, terminal
               output streams, handoff edges pulse.
             </p>
           </div>

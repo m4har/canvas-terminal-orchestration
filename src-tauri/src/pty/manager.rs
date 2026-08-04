@@ -57,7 +57,7 @@ impl PtyManager {
         let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".into());
         let mut cmd = CommandBuilder::new(&shell);
         cmd.arg("-l");
-        if let Some(dir) = cwd.filter(|d| !d.is_empty()) {
+        if let Some(dir) = resolve_spawn_cwd(cwd) {
             cmd.cwd(dir);
         }
 
@@ -218,4 +218,13 @@ impl PtyManager {
             }
         }
     }
+}
+
+fn resolve_spawn_cwd(cwd: Option<String>) -> Option<String> {
+    if let Some(dir) = cwd.filter(|d| !d.is_empty()) {
+        if Path::new(&dir).is_dir() {
+            return Some(dir);
+        }
+    }
+    std::env::current_dir().ok().map(|p| p.to_string_lossy().to_string())
 }

@@ -60,10 +60,6 @@ pub fn resolve_binary(app_data_dir: &Path) -> Option<PathBuf> {
     })
 }
 
-pub fn is_present(app_data_dir: &Path) -> bool {
-    resolve_binary(app_data_dir).is_some()
-}
-
 #[derive(Debug, Deserialize)]
 struct GhRelease {
     assets: Vec<GhAsset>,

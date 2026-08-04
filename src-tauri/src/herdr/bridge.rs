@@ -321,11 +321,6 @@ impl HerdrBridge {
         Err("herdr socket is only supported on unix".into())
     }
 
-    pub fn resize_pane_pty(&self, pane_id: &str, cols: u16, rows: u16) -> Result<(), String> {
-        let binary = self.binary()?.clone();
-        binary::resize_pane_terminal(&binary, pane_id, cols, rows)
-    }
-
     pub fn shutdown(&mut self) {
         #[cfg(unix)]
         {

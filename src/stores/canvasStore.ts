@@ -10,6 +10,12 @@ import { assessHerdrReady } from "../lib/herdr/requireHerdr";
 import type { HerdrInstallReason } from "../lib/herdr/requireHerdr";
 import { refreshHerdrConnection } from "../hooks/useHerdrConnection";
 import {
+  APP_SETTING_INTRO_COMPLETED,
+  saveCanvas,
+  setAppSetting,
+} from "../lib/workflow";
+import { setPendingHmrCanvasSnapshot } from "../lib/hmrCanvasSnapshot";
+import {
   createMarkdownNodeData,
   createSquareNodeData,
   createTerminalNodeData,
@@ -75,15 +81,24 @@ interface CanvasState {
   nodes: Node[];
   edges: Edge[];
   initialized: boolean;
+  introActive: boolean;
   herdrOnline: boolean | null;
   herdrLifecycle: HerdrLifecycle | null;
   handoff: HandoffState;
   markdownEditor: MarkdownEditorState;
   herdrInstall: HerdrInstallState;
-  addTextNode: (label?: string, fontSize?: number) => void;
-  addSquareNode: (width?: number, height?: number) => void;
-  addTerminalNode: (label?: string, agentKind?: string) => void;
-  addMarkdownNode: (title?: string) => void;
+  addTextNode: (label?: string, fontSize?: number, position?: { x: number; y: number }) => void;
+  addSquareNode: (
+    width?: number,
+    height?: number,
+    position?: { x: number; y: number }
+  ) => void;
+  addTerminalNode: (
+    label?: string,
+    agentKind?: string,
+    position?: { x: number; y: number }
+  ) => void;
+  addMarkdownNode: (title?: string, position?: { x: number; y: number }) => void;
   updateMarkdownNode: (id: string, patch: Partial<MarkdownNodeData>) => void;
   updateTextNode: (id: string, patch: Partial<TextNodeData>) => void;
   updateSquareNode: (id: string, patch: Partial<SquareNodeData>) => void;
@@ -109,6 +124,8 @@ interface CanvasState {
   setEdges: (edges: Edge[]) => void;
   hydrate: (nodes: Node[], edges: Edge[]) => void;
   setInitialized: (value: boolean) => void;
+  setIntroActive: (value: boolean) => void;
+  completeIntro: (keepDemo: boolean) => void;
   setHerdrOnline: (value: boolean | null) => void;
   setHerdrLifecycle: (value: HerdrLifecycle | null) => void;
 }
@@ -201,48 +218,41 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   nodes: [],
   edges: [],
   initialized: false,
+  introActive: false,
   herdrOnline: null,
   herdrLifecycle: null,
   handoff: { open: false, targetId: null, payload: "" },
   markdownEditor: { open: false, nodeId: null },
   herdrInstall: { ...CLOSED_HERDR_INSTALL },
 
-  addTextNode: (label = "Label", fontSize = 18) => {
+  addTextNode: (label = "Label", fontSize = 18, position) => {
     const offset = get().nodes.length * 24;
+    const pos = position ?? { x: 120 + offset, y: 120 + offset };
     set({
-      nodes: [
-        ...get().nodes,
-        createTextFlowNode(label, fontSize, { x: 120 + offset, y: 120 + offset }),
-      ],
+      nodes: [...get().nodes, createTextFlowNode(label, fontSize, pos)],
     });
   },
 
-  addSquareNode: (width = 400, height = 300) => {
+  addSquareNode: (width = 400, height = 300, position) => {
     const offset = get().nodes.length * 16;
+    const pos = position ?? { x: 80 + offset, y: 80 + offset };
     set({
-      nodes: [
-        ...get().nodes,
-        createSquareFlowNode(width, height, { x: 80 + offset, y: 80 + offset }),
-      ],
+      nodes: [...get().nodes, createSquareFlowNode(width, height, pos)],
     });
   },
 
-  addTerminalNode: (label = "Terminal", agentKind) => {
+  addTerminalNode: (label = "Terminal", agentKind, position) => {
     const offset = get().nodes.length * 20;
-    const node = createTerminalFlowNode(label, agentKind, {
-      x: 200 + offset,
-      y: 180 + offset,
-    });
+    const pos = position ?? { x: 200 + offset, y: 180 + offset };
+    const node = createTerminalFlowNode(label, agentKind, pos);
     set({ nodes: [...get().nodes, node] });
   },
 
-  addMarkdownNode: (title = "Spec") => {
+  addMarkdownNode: (title = "Spec", position) => {
     const offset = get().nodes.length * 20;
+    const pos = position ?? { x: 100 + offset, y: 100 + offset };
     set({
-      nodes: [
-        ...get().nodes,
-        createMarkdownFlowNode(title, { x: 100 + offset, y: 100 + offset }),
-      ],
+      nodes: [...get().nodes, createMarkdownFlowNode(title, pos)],
     });
   },
 
@@ -453,6 +463,31 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
   setInitialized: (value) => set({ initialized: value }),
 
+  setIntroActive: (value) => set({ introActive: value }),
+
+  completeIntro: (keepDemo) => {
+    void setAppSetting(APP_SETTING_INTRO_COMPLETED, "true");
+    if (keepDemo) {
+      set({ introActive: false });
+    } else {
+      set({ nodes: [], edges: [], introActive: false });
+    }
+  },
+
   setHerdrOnline: (value) => set({ herdrOnline: value }),
   setHerdrLifecycle: (value) => set({ herdrLifecycle: value }),
 }));
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    const state = useCanvasStore.getState();
+    setPendingHmrCanvasSnapshot({
+      nodes: state.nodes,
+      edges: state.edges,
+      introActive: state.introActive,
+    });
+    if (state.initialized && !state.introActive) {
+      void saveCanvas(state.workflowId, state.nodes, state.edges);
+    }
+  });
+}

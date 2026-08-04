@@ -2,15 +2,21 @@ import { ReactFlowProvider } from "@xyflow/react";
 import { useEffect } from "react";
 import { Canvas } from "./components/canvas/Canvas";
 import { CanvasToolbar } from "./components/canvas/CanvasToolbar";
+import { IntroOverlay } from "./components/onboarding/IntroOverlay";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { useCanvasPersistence } from "./hooks/useCanvasPersistence";
 import { useHerdrConnection } from "./hooks/useHerdrConnection";
+import { resolveProjectCwd } from "./lib/herdr/env";
 import { isAutomationMode } from "./lib/runtimeFlags";
 import { preloadXterm } from "./lib/terminal/xtermLoader";
 
 function AppShell() {
   useCanvasPersistence();
   useHerdrConnection();
+
+  useEffect(() => {
+    void resolveProjectCwd();
+  }, []);
 
   useEffect(() => {
     if (!isAutomationMode()) {
@@ -25,6 +31,7 @@ function AppShell() {
         <main className="min-h-0 flex-1">
           <Canvas />
         </main>
+        <IntroOverlay />
       </ReactFlowProvider>
     </div>
   );

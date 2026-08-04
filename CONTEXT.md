@@ -15,6 +15,8 @@ Ubiquitous language for Canvas Orchestra Loop Engineer. Implementation details b
 | Term | Definition |
 |------|------------|
 | **Workflow** | A saved template of nodes and edges representing a repeatable process. |
+| **Demo Workflow** | Pre-built canvas layout (Auth Refactor) with mock terminal previews for onboarding. |
+| **Intro** | First-run guided overlay explaining canvas concepts before the user starts working. |
 | **Run** | A single execution instance of a Workflow. Introduced in v0.2. |
 | **RunEvent** | A timestamped log entry during a Run (e.g. node done, blocked, handoff fired). Introduced in v0.2. |
 

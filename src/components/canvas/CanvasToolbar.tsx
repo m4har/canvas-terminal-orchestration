@@ -13,6 +13,7 @@ import {
 import { useReactFlow } from "@xyflow/react";
 import { useTheme } from "../theme/ThemeProvider";
 import { useTerminalFontSize, TERMINAL_FONT_SIZES } from "../../hooks/useTerminalFontSize";
+import { useViewportCenter } from "../../hooks/useViewportCenter";
 import { useCanvasStore } from "../../stores/canvasStore";
 import { HerdrStatusBadge } from "./HerdrStatusBadge";
 
@@ -27,6 +28,12 @@ export function CanvasToolbar() {
   const { resolved, toggleTheme } = useTheme();
   const { fontSize, setFontSize } = useTerminalFontSize();
   const { fitView } = useReactFlow();
+  const centerAt = useViewportCenter();
+
+  const TEXT_SIZE = { w: 200, h: 56 };
+  const SQUARE_SIZE = { w: 400, h: 300 };
+  const MARKDOWN_SIZE = { w: 256, h: 200 };
+  const TERMINAL_SIZE = { w: 288, h: 200 };
 
   return (
     <header className="flex h-10 shrink-0 items-center gap-1 border-b border-[var(--border)] px-3">
@@ -34,19 +41,39 @@ export function CanvasToolbar() {
         Canvas Orchestra
       </span>
 
-      <ToolbarButton label="Add text" onClick={() => addTextNode("Label", 18)}>
+      <ToolbarButton
+        label="Add text"
+        onClick={() =>
+          addTextNode("Label", 18, centerAt(TEXT_SIZE.w, TEXT_SIZE.h))
+        }
+      >
         <TextT size={16} weight="regular" />
       </ToolbarButton>
 
-      <ToolbarButton label="Add square" onClick={() => addSquareNode()}>
+      <ToolbarButton
+        label="Add square"
+        onClick={() =>
+          addSquareNode(SQUARE_SIZE.w, SQUARE_SIZE.h, centerAt(SQUARE_SIZE.w, SQUARE_SIZE.h))
+        }
+      >
         <Square size={16} weight="regular" />
       </ToolbarButton>
 
-      <ToolbarButton label="Add markdown" onClick={() => addMarkdownNode("Spec")}>
+      <ToolbarButton
+        label="Add markdown"
+        onClick={() =>
+          addMarkdownNode("Spec", centerAt(MARKDOWN_SIZE.w, MARKDOWN_SIZE.h))
+        }
+      >
         <FileText size={16} weight="regular" />
       </ToolbarButton>
 
-      <ToolbarButton label="Add terminal" onClick={() => addTerminalNode("Terminal")}>
+      <ToolbarButton
+        label="Add terminal"
+        onClick={() =>
+          addTerminalNode("Terminal", undefined, centerAt(TERMINAL_SIZE.w, TERMINAL_SIZE.h))
+        }
+      >
         <Terminal size={16} weight="regular" />
       </ToolbarButton>
 

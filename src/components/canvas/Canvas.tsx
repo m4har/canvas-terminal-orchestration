@@ -124,6 +124,7 @@ export function Canvas() {
         defaultEdgeOptions={{ type: "handoff" }}
         elevateNodesOnSelect={false}
         fitView
+        fitViewOptions={{ padding: 0.12 }}
         proOptions={{ hideAttribution: true }}
       >
         <Background gap={20} color="var(--canvas-dot)" />

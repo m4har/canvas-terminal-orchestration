@@ -15,7 +15,7 @@ export function TextNode({
 
   return (
     <div
-      className="relative flex h-full min-h-[40px] min-w-[80px] flex-col gap-1 rounded-md border border-[var(--border)] bg-[var(--node-fill)] px-3 py-2 hover:bg-[var(--node-hover)]"
+      className="relative flex h-full min-h-[40px] min-w-[80px] flex-col gap-1 bg-transparent px-0 py-0"
       style={{
         fontSize: `${data.fontSize}px`,
         fontWeight: data.fontWeight ?? "normal",

@@ -60,6 +60,16 @@ body {
   stroke: var(--edge-stroke);
 }
 
+.handoff-edge-path {
+  animation: handoff-dash-flow 1s linear infinite;
+}
+
+@keyframes handoff-dash-flow {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
 .react-flow__edge.animated path {
   stroke-dasharray: 5;
   animation: react-flow__edge-animation 0.5s linear infinite;

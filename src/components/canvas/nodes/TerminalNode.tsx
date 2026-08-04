@@ -87,7 +87,7 @@ export function TerminalNode({
           </span>
         )}
         {data.status === "working" && !isRealHerdrPane(data.herdrPaneId) ? (
-          <span className="shrink-0 text-[9px] text-amber-500">connecting</span>
+          <span className="shrink-0 text-[9px] text-[var(--warning)]">connecting</span>
         ) : null}
         <PaneIdBadge paneId={data.herdrPaneId} />
       </div>

@@ -10,6 +10,22 @@ vi.mock("../lib/herdr/connect", () => ({
   connectHerdr: vi.fn().mockResolvedValue(true),
 }));
 
+vi.mock("../lib/herdr/status", () => ({
+  fetchHerdrStatus: vi.fn().mockResolvedValue({
+    platform: "macos",
+    lifecycle: "connected",
+    present: true,
+    connected: true,
+    spawnedByUs: false,
+    progress: 1,
+    message: "",
+  }),
+}));
+
+vi.mock("../lib/workflow", () => ({
+  isTauriRuntime: vi.fn(() => false),
+}));
+
 vi.mock("../lib/herdr/dispatch", () => ({
   checkHerdrAvailable: vi.fn().mockResolvedValue(true),
   reconcileTerminalPanes: vi.fn().mockResolvedValue(undefined),

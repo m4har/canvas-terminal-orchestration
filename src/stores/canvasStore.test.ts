@@ -9,7 +9,7 @@ vi.mock("../lib/herdr/connect", () => ({
 vi.mock("../lib/herdr/client", () => ({
   herdrStatus: vi.fn().mockResolvedValue(false),
   provisionTerminalPane: vi.fn(),
-  dispatchToPane: vi.fn(),
+  dispatchToPane: vi.fn().mockResolvedValue({ preview: "$ ok\n", status: "working" }),
   setHerdrRunner: vi.fn(),
   resetHerdrCache: vi.fn(),
 }));
@@ -22,6 +22,23 @@ vi.mock("../lib/herdr/dispatch", async (importOriginal) => {
     provisionNodePane: vi.fn().mockResolvedValue(undefined),
   };
 });
+
+vi.mock("../lib/herdr/requireHerdr", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../lib/herdr/requireHerdr")>();
+  return {
+    ...actual,
+    assessHerdrReady: vi.fn().mockResolvedValue({ state: "missing", snapshot: {} }),
+  };
+});
+
+vi.mock("../hooks/useHerdrConnection", () => ({
+  refreshHerdrConnection: vi.fn().mockResolvedValue(false),
+}));
+
+vi.mock("../lib/herdr/bind", () => ({
+  bindHerdrToTerminal: vi.fn().mockResolvedValue("w1:p9"),
+  isHerdrBound: (data: { herdrBound?: boolean }) => data.herdrBound === true,
+}));
 
 import {
   createSquareFlowNode,
@@ -36,8 +53,16 @@ describe("canvasStore", () => {
       edges: [],
       initialized: false,
       herdrOnline: null,
+      herdrLifecycle: null,
       handoff: { open: false, targetId: null, payload: "" },
       markdownEditor: { open: false, nodeId: null },
+      herdrInstall: {
+        open: false,
+        reason: "bind",
+        installing: false,
+        installProgress: 0,
+        installMessage: "",
+      },
     });
     vi.useFakeTimers();
   });
@@ -98,21 +123,67 @@ describe("canvasStore", () => {
     expect(handoff.payload).toContain("Auth Refactor Plan");
   });
 
-  it("sendHandoff sets terminal working then done", async () => {
+  it("sendHandoff opens herdr install when herdr missing", async () => {
     useCanvasStore.getState().loadDemoWorkflow();
+    useCanvasStore.getState().openHandoff("term-planner");
+    useCanvasStore.getState().sendHandoff("implement auth");
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(useCanvasStore.getState().herdrInstall.open).toBe(true);
+    expect(useCanvasStore.getState().herdrInstall.reason).toBe("handoff");
+  });
+
+  it("bindHerdr opens install modal when herdr missing", async () => {
+    useCanvasStore.getState().addTerminalNode("T1");
+    const termId = useCanvasStore.getState().nodes.find((n) => n.type === "terminal")!.id;
+    useCanvasStore.getState().bindHerdr(termId, "pty-1");
+    await Promise.resolve();
+
+    expect(useCanvasStore.getState().herdrInstall.open).toBe(true);
+    expect(useCanvasStore.getState().herdrInstall.pendingBind?.terminalId).toBe(termId);
+  });
+
+  it("sendHandoff dispatches to pane when herdr ready and bound", async () => {
+    const { assessHerdrReady } = await import("../lib/herdr/requireHerdr");
+    const { dispatchToPane } = await import("../lib/herdr/client");
+    vi.mocked(assessHerdrReady).mockResolvedValue({
+      state: "ready",
+      snapshot: {
+        platform: "macos",
+        lifecycle: "connected",
+        present: true,
+        connected: true,
+        spawnedByUs: false,
+        progress: 1,
+        message: "",
+      },
+    });
+
+    useCanvasStore.getState().loadDemoWorkflow();
+    useCanvasStore.setState({
+      nodes: useCanvasStore.getState().nodes.map((n) =>
+        n.id === "term-planner" && n.type === "terminal"
+          ? {
+              ...n,
+              data: {
+                ...(n.data as Record<string, unknown>),
+                herdrBound: true,
+                herdrPaneId: "w1:p9",
+              },
+            }
+          : n
+      ),
+    });
     useCanvasStore.getState().openHandoff("term-planner");
     useCanvasStore.getState().sendHandoff("implement auth");
     await Promise.resolve();
     await Promise.resolve();
     await Promise.resolve();
 
-    let terminal = useCanvasStore.getState().nodes.find((n) => n.id === "term-planner");
+    expect(dispatchToPane).toHaveBeenCalled();
+    const terminal = useCanvasStore.getState().nodes.find((n) => n.id === "term-planner");
     expect(terminal?.data).toMatchObject({ status: "working" });
-
-    vi.advanceTimersByTime(1600);
-    await vi.runAllTimersAsync();
-    terminal = useCanvasStore.getState().nodes.find((n) => n.id === "term-planner");
-    expect(terminal?.data).toMatchObject({ status: "done" });
   });
 
   it("opens markdown editor for markdown node", () => {
@@ -152,17 +223,13 @@ describe("canvasStore", () => {
     });
   });
 
-  it("runParallelFanOut dispatches to fe and be", async () => {
+  it("runParallelFanOut opens install modal when herdr missing", async () => {
     useCanvasStore.getState().loadDemoWorkflow();
     useCanvasStore.getState().runParallelFanOut();
     await Promise.resolve();
     await Promise.resolve();
-    await Promise.resolve();
 
-    const fe = useCanvasStore.getState().nodes.find((n) => n.id === "term-fe");
-    const be = useCanvasStore.getState().nodes.find((n) => n.id === "term-be");
-    expect(fe?.data).toMatchObject({ status: "working" });
-    expect(be?.data).toMatchObject({ status: "working" });
+    expect(useCanvasStore.getState().herdrInstall.open).toBe(true);
   });
 });
 

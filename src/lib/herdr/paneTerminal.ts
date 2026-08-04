@@ -1,86 +1,123 @@
 import { isAutomationMode } from "../runtimeFlags";
+import { encodeXtermInput } from "../terminal/xtermInput";
 import { isRealHerdrPane } from "./dispatch";
-import { readPaneAnsi, sendPaneInput } from "./client";
+import { readPaneRecent, readPaneVisible, sendPaneInput } from "./client";
 
-const POLL_MS = 1000;
-const INPUT_POLL_DEBOUNCE_MS = 50;
-const INPUT_GRACE_MS = 200;
+const POLL_MS = 150;
+const ENTER_DEBOUNCE_MS = 80;
+const VISIBLE_RESYNC_AFTER_EMPTY = 3;
 
-export function syncPaneOutput(prev: string, next: string): { action: "skip" } | { action: "append"; text: string } | { action: "reset"; text: string } {
+export type PaneSyncUpdate =
+  | { action: "skip" }
+  | { action: "append"; text: string }
+  | { action: "reset"; text: string };
+
+export function syncVisibleOutput(prev: string, next: string): PaneSyncUpdate {
   if (next === prev) return { action: "skip" };
   if (!next && prev) return { action: "skip" };
-  if (prev && next.startsWith(prev)) {
-    return { action: "append", text: next.slice(prev.length) };
-  }
   return { action: "reset", text: next };
 }
 
 export function startPaneTerminalSync(
   paneId: string,
-  onSync: (update: ReturnType<typeof syncPaneOutput>) => void,
+  onSync: (update: PaneSyncUpdate) => void,
   onInput: (data: string) => void,
   lines = 24,
   active = true
 ) {
-  let snapshot = "";
+  let visibleSnapshot = "";
   let stopped = false;
-  let inputPollTimer: number | undefined;
   let pollTimer: number | undefined;
-  let inputGraceUntil = 0;
+  let enterTimer: number | undefined;
+  let polling = false;
+  let emptyRecentCount = 0;
   const live =
     active && !isAutomationMode() && isRealHerdrPane(paneId);
 
-  const poll = async () => {
+  const resyncVisible = async () => {
     if (stopped || !live) return;
     try {
-      const next = await readPaneAnsi(paneId, lines);
-      const update = syncPaneOutput(snapshot, next);
-      if (update.action === "reset" && Date.now() < inputGraceUntil) return;
+      const next = await readPaneVisible(paneId, lines);
+      const update = syncVisibleOutput(visibleSnapshot, next);
       if (update.action !== "skip") {
-        snapshot = next;
+        visibleSnapshot = next;
         onSync(update);
       }
     } catch {
-      // ponytail: poll errors are transient while pane warms up
+      // ponytail: pane may still be warming up
     }
   };
 
-  const schedulePoll = () => {
+  const pollRecent = async () => {
+    if (stopped || !live || polling) return;
+    polling = true;
+    try {
+      const recent = await readPaneRecent(paneId, lines);
+      if (recent) {
+        emptyRecentCount = 0;
+        onSync({ action: "append", text: recent });
+      } else {
+        emptyRecentCount += 1;
+        if (emptyRecentCount >= VISIBLE_RESYNC_AFTER_EMPTY) {
+          emptyRecentCount = 0;
+          await resyncVisible();
+        }
+      }
+    } catch {
+      // ponytail: poll errors are transient while pane warms up
+    } finally {
+      polling = false;
+      scheduleNextPoll();
+    }
+  };
+
+  const scheduleNextPoll = () => {
+    if (stopped || !live) return;
+    if (pollTimer) window.clearTimeout(pollTimer);
+    pollTimer = window.setTimeout(() => {
+      pollTimer = undefined;
+      void pollRecent();
+    }, POLL_MS);
+  };
+
+  const scheduleVisibleResync = () => {
     if (!live) return;
-    if (inputPollTimer) window.clearTimeout(inputPollTimer);
-    inputPollTimer = window.setTimeout(() => {
-      inputPollTimer = undefined;
-      void poll();
-    }, INPUT_POLL_DEBOUNCE_MS);
+    if (enterTimer) window.clearTimeout(enterTimer);
+    enterTimer = window.setTimeout(() => {
+      enterTimer = undefined;
+      void resyncVisible();
+    }, ENTER_DEBOUNCE_MS);
   };
 
   if (live) {
-    pollTimer = window.setInterval(() => void poll(), POLL_MS);
-    void poll();
+    void resyncVisible().then(() => scheduleNextPoll());
   }
 
   return {
     pushMock(text: string) {
-      const update = syncPaneOutput(snapshot, text);
+      const update = syncVisibleOutput(visibleSnapshot, text);
       if (update.action !== "skip") {
-        snapshot = text;
+        visibleSnapshot = text;
         onSync(update);
       }
     },
     send(data: string) {
       if (isRealHerdrPane(paneId) && !isAutomationMode()) {
-        inputGraceUntil = Date.now() + INPUT_GRACE_MS;
+        const input = encodeXtermInput(data);
+        const isEnter = input.kind === "keys" && input.keys[0] === "enter";
         void sendPaneInput(paneId, data);
         onInput(data);
-        schedulePoll();
+        if (isEnter) {
+          scheduleVisibleResync();
+        }
       } else {
         onInput(data);
       }
     },
     dispose() {
       stopped = true;
-      if (pollTimer) window.clearInterval(pollTimer);
-      if (inputPollTimer) window.clearTimeout(inputPollTimer);
+      if (pollTimer) window.clearTimeout(pollTimer);
+      if (enterTimer) window.clearTimeout(enterTimer);
     },
   };
 }

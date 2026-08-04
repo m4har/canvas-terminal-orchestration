@@ -36,16 +36,16 @@ describe("createSquareNodeData", () => {
 });
 
 describe("createTerminalNodeData", () => {
-  it("defaults to idle pane-first shell", () => {
+  it("defaults to idle local shell", () => {
     const data = createTerminalNodeData({
       label: "Planner",
-      herdrPaneId: "pane-1",
       cwd: "/project",
     });
 
     expect(data.status).toBe("idle");
-    expect(data.herdrPaneId).toBe("pane-1");
-    expect(data.outputPreview).toContain("ready");
+    expect(data.herdrPaneId).toBe("");
+    expect(data.herdrBound).toBe(false);
+    expect(data.outputPreview).toContain("local");
   });
 });
 

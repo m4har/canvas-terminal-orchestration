@@ -1,28 +1,44 @@
 import { create } from "zustand";
 import type { Edge, Node } from "@xyflow/react";
+import { runInstallViaApp } from "../lib/herdr/install";
 import { createDemoWorkflow } from "../lib/demoWorkflow";
 import { buildHandoffPayload, findEdgeSource } from "../lib/handoff";
-import { provisionNodePane, runHandoff } from "../lib/herdr/dispatch";
+import { bindHerdrToTerminal } from "../lib/herdr/bind";
+import { runHandoff } from "../lib/herdr/dispatch";
+import { getProjectCwd } from "../lib/herdr/env";
+import { assessHerdrReady } from "../lib/herdr/requireHerdr";
+import type { HerdrInstallReason } from "../lib/herdr/requireHerdr";
+import { refreshHerdrConnection } from "../hooks/useHerdrConnection";
 import {
   createMarkdownNodeData,
   createSquareNodeData,
   createTerminalNodeData,
   createTextNodeData,
 } from "../lib/nodes";
-import type { MarkdownNodeData, SquareNodeData, TerminalNodeData, TextNodeData } from "../lib/types";
+import type { HerdrLifecycle } from "../lib/herdr/status";
+
+export type { HerdrInstallReason };
 
 const WORKFLOW_ID = "default";
 let nodeCounter = 0;
-let paneCounter = 0;
+
+const CLOSED_HERDR_INSTALL = {
+  open: false,
+  reason: "bind" as HerdrInstallReason,
+  installing: false,
+  installProgress: 0,
+  installMessage: "",
+  pendingBind: undefined as
+    | { terminalId: string; ptyId: string; cols: number; rows: number }
+    | undefined,
+  pendingHandoff: undefined as
+    | { terminalId: string; prompt: string }
+    | undefined,
+};
 
 function nextId(prefix: string) {
   nodeCounter += 1;
   return `${prefix}-${nodeCounter}`;
-}
-
-function nextPaneId() {
-  paneCounter += 1;
-  return `pane-${paneCounter}`;
 }
 
 interface HandoffState {
@@ -36,14 +52,34 @@ interface MarkdownEditorState {
   nodeId: string | null;
 }
 
+export interface HerdrInstallState {
+  open: boolean;
+  reason: HerdrInstallReason;
+  installing: boolean;
+  installProgress: number;
+  installMessage: string;
+  pendingBind?: {
+    terminalId: string;
+    ptyId: string;
+    cols: number;
+    rows: number;
+  };
+  pendingHandoff?: {
+    terminalId: string;
+    prompt: string;
+  };
+}
+
 interface CanvasState {
   workflowId: string;
   nodes: Node[];
   edges: Edge[];
   initialized: boolean;
   herdrOnline: boolean | null;
+  herdrLifecycle: HerdrLifecycle | null;
   handoff: HandoffState;
   markdownEditor: MarkdownEditorState;
+  herdrInstall: HerdrInstallState;
   addTextNode: (label?: string, fontSize?: number) => void;
   addSquareNode: (width?: number, height?: number) => void;
   addTerminalNode: (label?: string, agentKind?: string) => void;
@@ -60,11 +96,21 @@ interface CanvasState {
   openMarkdownEditor: (nodeId: string) => void;
   closeMarkdownEditor: () => void;
   forceDone: (terminalId: string) => void;
+  bindHerdr: (terminalId: string, ptyId: string, cols?: number, rows?: number) => void;
+  openHerdrInstall: (input: {
+    reason: HerdrInstallReason;
+    pendingBind?: HerdrInstallState["pendingBind"];
+    pendingHandoff?: HerdrInstallState["pendingHandoff"];
+  }) => void;
+  closeHerdrInstall: () => void;
+  installHerdrViaApp: () => void;
+  retryHerdrInstall: () => void;
   setNodes: (nodes: Node[]) => void;
   setEdges: (edges: Edge[]) => void;
   hydrate: (nodes: Node[], edges: Edge[]) => void;
   setInitialized: (value: boolean) => void;
   setHerdrOnline: (value: boolean | null) => void;
+  setHerdrLifecycle: (value: HerdrLifecycle | null) => void;
 }
 
 export function createTextFlowNode(
@@ -109,8 +155,7 @@ export function createTerminalFlowNode(
     style: { width: 288, height: 200 },
     data: createTerminalNodeData({
       label,
-      herdrPaneId: nextPaneId(),
-      cwd: "/project",
+      cwd: getProjectCwd(),
       agentKind,
     }),
   };
@@ -129,14 +174,38 @@ export function createMarkdownFlowNode(
   };
 }
 
+async function continuePendingHerdrAction(get: () => CanvasState) {
+  const { pendingBind, pendingHandoff } = get().herdrInstall;
+  if (pendingBind) {
+    await bindHerdrToTerminal(
+      get,
+      pendingBind.terminalId,
+      pendingBind.ptyId,
+      pendingBind.cols,
+      pendingBind.rows
+    );
+    return;
+  }
+  if (pendingHandoff) {
+    await runHandoff(
+      () => get(),
+      (partial) => useCanvasStore.setState(partial),
+      pendingHandoff.terminalId,
+      pendingHandoff.prompt
+    );
+  }
+}
+
 export const useCanvasStore = create<CanvasState>((set, get) => ({
   workflowId: WORKFLOW_ID,
   nodes: [],
   edges: [],
   initialized: false,
   herdrOnline: null,
+  herdrLifecycle: null,
   handoff: { open: false, targetId: null, payload: "" },
   markdownEditor: { open: false, nodeId: null },
+  herdrInstall: { ...CLOSED_HERDR_INSTALL },
 
   addTextNode: (label = "Label", fontSize = 18) => {
     const offset = get().nodes.length * 24;
@@ -165,7 +234,6 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       y: 180 + offset,
     });
     set({ nodes: [...get().nodes, node] });
-    void provisionNodePane(get, set, node.id);
   },
 
   addMarkdownNode: (title = "Spec") => {
@@ -229,12 +297,12 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   loadDemoWorkflow: () => {
     const { nodes, edges } = createDemoWorkflow();
     nodeCounter = 10;
-    paneCounter = 3;
     set({
       nodes,
       edges,
       handoff: { open: false, targetId: null, payload: "" },
       markdownEditor: { open: false, nodeId: null },
+      herdrInstall: { ...CLOSED_HERDR_INSTALL },
     });
   },
 
@@ -290,6 +358,94 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     get().updateTerminalNode(terminalId, { status: "done" });
   },
 
+  openHerdrInstall: (input) => {
+    set({
+      herdrInstall: {
+        open: true,
+        reason: input.reason,
+        installing: false,
+        installProgress: 0,
+        installMessage: "",
+        pendingBind: input.pendingBind,
+        pendingHandoff: input.pendingHandoff,
+      },
+    });
+  },
+
+  closeHerdrInstall: () => {
+    set({ herdrInstall: { ...CLOSED_HERDR_INSTALL } });
+  },
+
+  installHerdrViaApp: () => {
+    set({
+      herdrInstall: {
+        ...get().herdrInstall,
+        installing: true,
+        installProgress: 0.05,
+        installMessage: "starting",
+      },
+    });
+    void runInstallViaApp((progress, message) => {
+      set({
+        herdrInstall: {
+          ...get().herdrInstall,
+          installProgress: progress,
+          installMessage: message,
+        },
+      });
+    }).then((ok) => {
+      set({
+        herdrInstall: {
+          ...get().herdrInstall,
+          installing: false,
+          installMessage: ok ? "" : get().herdrInstall.installMessage,
+        },
+      });
+      if (ok) void refreshHerdrConnection();
+    });
+  },
+
+  retryHerdrInstall: () => {
+    void (async () => {
+      const online = await refreshHerdrConnection();
+      const { state } = await assessHerdrReady(true);
+      if (online || state === "ready") {
+        await continuePendingHerdrAction(get);
+        get().closeHerdrInstall();
+        return;
+      }
+      get().openHerdrInstall({
+        reason: get().herdrInstall.reason,
+        pendingBind: get().herdrInstall.pendingBind,
+        pendingHandoff: get().herdrInstall.pendingHandoff,
+      });
+    })();
+  },
+
+  bindHerdr: (terminalId, ptyId, cols = 80, rows = 24) => {
+    void (async () => {
+      const { state } = await assessHerdrReady(false);
+      if (state === "missing" || state === "unsupported") {
+        get().openHerdrInstall({
+          reason: "bind",
+          pendingBind: { terminalId, ptyId, cols, rows },
+        });
+        return;
+      }
+      if (state === "offline") {
+        const online = await refreshHerdrConnection();
+        if (!online) {
+          get().openHerdrInstall({
+            reason: "bind",
+            pendingBind: { terminalId, ptyId, cols, rows },
+          });
+          return;
+        }
+      }
+      await bindHerdrToTerminal(get, terminalId, ptyId, cols, rows);
+    })();
+  },
+
   setNodes: (nodes) => set({ nodes }),
   setEdges: (edges) => set({ edges }),
 
@@ -298,4 +454,5 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   setInitialized: (value) => set({ initialized: value }),
 
   setHerdrOnline: (value) => set({ herdrOnline: value }),
+  setHerdrLifecycle: (value) => set({ herdrLifecycle: value }),
 }));

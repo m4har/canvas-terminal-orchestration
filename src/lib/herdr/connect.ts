@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { isTauriRuntime } from "../workflow";
+import { ensureHerdrPresent } from "./status";
 import { herdrRun } from "./client";
 
 export function parseHerdrServerStatus(json: string): boolean {
@@ -25,6 +26,7 @@ export async function connectHerdr(): Promise<boolean> {
 
   if (isTauriRuntime()) {
     try {
+      await ensureHerdrPresent();
       return await invoke<boolean>("herdr_connect");
     } catch {
       return false;

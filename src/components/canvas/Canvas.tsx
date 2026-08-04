@@ -14,6 +14,7 @@ import { useCanvasStore } from "../../stores/canvasStore";
 import { useTheme } from "../theme/ThemeProvider";
 import { HandoffEdge } from "./edges/HandoffEdge";
 import { HandoffDialog } from "./HandoffDialog";
+import { HerdrInstallDialog } from "./HerdrInstallDialog";
 import { MarkdownEditorDialog } from "../markdown/MarkdownEditorDialog";
 import { MarkdownNode } from "./nodes/MarkdownNode";
 import { SquareNode } from "./nodes/SquareNode";
@@ -38,6 +39,7 @@ export function Canvas() {
   const edges = useCanvasStore((state) => state.edges);
   const handoff = useCanvasStore((state) => state.handoff);
   const markdownEditor = useCanvasStore((state) => state.markdownEditor);
+  const herdrInstall = useCanvasStore((state) => state.herdrInstall);
   const setNodes = useCanvasStore((state) => state.setNodes);
   const setEdges = useCanvasStore((state) => state.setEdges);
   const openHandoff = useCanvasStore((state) => state.openHandoff);
@@ -45,6 +47,9 @@ export function Canvas() {
   const sendHandoff = useCanvasStore((state) => state.sendHandoff);
   const closeMarkdownEditor = useCanvasStore((state) => state.closeMarkdownEditor);
   const updateMarkdownNode = useCanvasStore((state) => state.updateMarkdownNode);
+  const closeHerdrInstall = useCanvasStore((state) => state.closeHerdrInstall);
+  const retryHerdrInstall = useCanvasStore((state) => state.retryHerdrInstall);
+  const installHerdrViaApp = useCanvasStore((state) => state.installHerdrViaApp);
 
   const renderNodes = useMemo(() => sortNodesForRender(nodes), [nodes]);
 
@@ -138,6 +143,17 @@ export function Canvas() {
         payload={handoff.payload}
         onClose={closeHandoff}
         onSend={sendHandoff}
+      />
+
+      <HerdrInstallDialog
+        open={herdrInstall.open}
+        reason={herdrInstall.reason}
+        installing={herdrInstall.installing}
+        installProgress={herdrInstall.installProgress}
+        installMessage={herdrInstall.installMessage}
+        onClose={closeHerdrInstall}
+        onRetry={retryHerdrInstall}
+        onInstallViaApp={installHerdrViaApp}
       />
 
       <MarkdownEditorDialog

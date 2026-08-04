@@ -1,11 +1,14 @@
 import type { GetState, SetState } from "zustand";
+import { bindHerdrToTerminal, isHerdrBound } from "./bind";
 import {
   dispatchToPane,
   herdrStatus,
+  paneExists,
   provisionTerminalPane,
 } from "./client";
 import { connectHerdr } from "./connect";
 import { getProjectCwd } from "./env";
+import { assessHerdrReady } from "./requireHerdr";
 import { isAutomationMode } from "../runtimeFlags";
 import type { TerminalNodeData } from "../types";
 
@@ -20,7 +23,7 @@ export function resetHerdrState() {
 }
 
 export function isRealHerdrPane(paneId: string) {
-  return /^w[a-zA-Z0-9]+:p\d+$/.test(paneId);
+  return /^w[a-zA-Z0-9]+:p[a-zA-Z0-9]+$/.test(paneId);
 }
 
 export async function checkHerdrAvailable(force = false) {
@@ -39,6 +42,16 @@ export async function checkHerdrAvailable(force = false) {
 interface CanvasSlice {
   nodes: Array<{ id: string; type?: string; data: unknown }>;
   updateTerminalNode: (id: string, patch: Partial<TerminalNodeData>) => void;
+  openHerdrInstall: (input: {
+    reason: "bind" | "handoff" | "toolbar";
+    pendingBind?: {
+      terminalId: string;
+      ptyId: string;
+      cols: number;
+      rows: number;
+    };
+    pendingHandoff?: { terminalId: string; prompt: string };
+  }) => void;
 }
 
 export async function provisionNodePane(
@@ -57,11 +70,14 @@ export async function provisionNodePane(
 
   get().updateTerminalNode(nodeId, {
     status: "working",
-    outputPreview: "$ connecting to Herdr pane...\n",
   });
 
   try {
-    const pane = await provisionTerminalPane(cwd);
+    const boundPaneIds = get()
+      .nodes.filter((n) => n.type === "terminal" && n.id !== nodeId)
+      .map((n) => (n.data as TerminalNodeData).herdrPaneId)
+      .filter((id) => isRealHerdrPane(id));
+    const pane = await provisionTerminalPane(cwd, boundPaneIds);
     get().updateTerminalNode(nodeId, {
       herdrPaneId: pane.pane_id,
       cwd: pane.cwd,
@@ -87,8 +103,16 @@ export async function reconcileTerminalPanes(
     const terminals = get().nodes.filter((n) => n.type === "terminal");
     for (const node of terminals) {
       const data = node.data as TerminalNodeData;
-      if (!isRealHerdrPane(data.herdrPaneId)) {
-        await provisionNodePane(get, set, node.id);
+      if (!isHerdrBound(data)) continue;
+      if (
+        isRealHerdrPane(data.herdrPaneId) &&
+        !(await paneExists(data.herdrPaneId))
+      ) {
+        get().updateTerminalNode(node.id, {
+          herdrBound: false,
+          status: "blocked",
+          outputPreview: "$ herdr pane missing — bind again\n",
+        });
       }
     }
   })().finally(() => {
@@ -132,13 +156,29 @@ export async function runHandoff(
   if (!node || node.type !== "terminal") return;
   const data = node.data as TerminalNodeData;
 
-  if (!isRealHerdrPane(data.herdrPaneId) && (await checkHerdrAvailable(true))) {
-    await provisionNodePane(get, set, terminalId);
-    const refreshed = get().nodes.find((n) => n.id === terminalId);
-    if (!refreshed || refreshed.type !== "terminal") return;
-    const paneId = (refreshed.data as TerminalNodeData).herdrPaneId;
-    if (!isRealHerdrPane(paneId)) return;
+  if (!isHerdrBound(data)) {
+    const { state } = await assessHerdrReady(true);
+    if (state !== "ready") {
+      get().openHerdrInstall({
+        reason: "handoff",
+        pendingHandoff: { terminalId, prompt },
+      });
+      return;
+    }
+    const ptyId = data.ptyId ?? "mock-pty";
+    const paneId = await bindHerdrToTerminal(get, terminalId, ptyId);
+    if (!paneId) {
+      get().openHerdrInstall({
+        reason: "handoff",
+        pendingHandoff: { terminalId, prompt },
+      });
+      return;
+    }
   }
+
+  const refreshed = get().nodes.find((n) => n.id === terminalId);
+  if (!refreshed || refreshed.type !== "terminal") return;
+  const paneData = refreshed.data as TerminalNodeData;
 
   get().updateTerminalNode(terminalId, {
     status: "working",
@@ -146,22 +186,23 @@ export async function runHandoff(
     outputPreview: `$ herdr\n> ${prompt.slice(0, 80)}...`,
   });
 
-  const live = (await checkHerdrAvailable(true)) && isRealHerdrPane(
-    (get().nodes.find((n) => n.id === terminalId)?.data as TerminalNodeData).herdrPaneId
-  );
+  const live =
+    isHerdrBound(paneData) && isRealHerdrPane(paneData.herdrPaneId);
 
   if (!live) {
-    simulateAgentRun(get, set, terminalId, prompt);
+    get().openHerdrInstall({
+      reason: "handoff",
+      pendingHandoff: { terminalId, prompt },
+    });
     return;
   }
 
   try {
-    const paneId = (get().nodes.find((n) => n.id === terminalId)?.data as TerminalNodeData)
-      .herdrPaneId;
-    const { preview, status } = await dispatchToPane(paneId, prompt, data.agentName);
+    const paneId = paneData.herdrPaneId;
+    const { preview, status } = await dispatchToPane(paneId, prompt, paneData.agentName);
     get().updateTerminalNode(terminalId, {
       status,
-      outputPreview: preview || data.outputPreview,
+      outputPreview: preview || paneData.outputPreview,
     });
   } catch (err) {
     get().updateTerminalNode(terminalId, {

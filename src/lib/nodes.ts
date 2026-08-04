@@ -32,17 +32,30 @@ export function createSquareNodeData(
 }
 
 export function createTerminalNodeData(
-  input: Pick<TerminalNodeData, "label" | "herdrPaneId" | "cwd"> &
-    Partial<Pick<TerminalNodeData, "status" | "agentKind" | "outputPreview" | "lastPrompt">>
+  input: Pick<TerminalNodeData, "label" | "cwd"> &
+    Partial<
+      Pick<
+        TerminalNodeData,
+        | "herdrPaneId"
+        | "status"
+        | "agentKind"
+        | "outputPreview"
+        | "lastPrompt"
+        | "ptyId"
+        | "herdrBound"
+      >
+    >
 ): TerminalNodeData {
   return {
     label: input.label,
-    herdrPaneId: input.herdrPaneId,
+    herdrPaneId: input.herdrPaneId ?? "",
     cwd: input.cwd,
     status: input.status ?? "idle",
     agentKind: input.agentKind,
-    outputPreview: input.outputPreview ?? "$ ready — start any agent via Herdr",
+    outputPreview: input.outputPreview ?? "$ local shell — bind Herdr when ready",
     lastPrompt: input.lastPrompt,
+    ptyId: input.ptyId,
+    herdrBound: input.herdrBound ?? false,
   };
 }
 

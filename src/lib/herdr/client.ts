@@ -1,6 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 import { isTauriRuntime } from "../workflow";
+import { encodeXtermInput } from "../terminal/xtermInput";
 import { parseHerdrServerStatus } from "./connect";
+import { bridgePaneReadRecent, bridgePaneReadVisible, bridgePaneResize, bridgePaneSend, bridgePaneSendKeys } from "./status";
 import { normalizeAgentStatus, parseHerdrJson, tailLines } from "./parse";
 import type {
   AgentListResult,
@@ -136,7 +138,10 @@ export async function readPaneText(paneId: string, lines = 12): Promise<string> 
   return out.trim();
 }
 
-export async function readPaneAnsi(paneId: string, lines = 24): Promise<string> {
+export async function readPaneVisible(paneId: string, lines = 24): Promise<string> {
+  if (isTauriRuntime()) {
+    return bridgePaneReadVisible(paneId, lines);
+  }
   const out = await herdrRun([
     "pane",
     "read",
@@ -151,13 +156,55 @@ export async function readPaneAnsi(paneId: string, lines = 24): Promise<string> 
   return out;
 }
 
+export async function readPaneRecent(paneId: string, lines = 24): Promise<string> {
+  if (isTauriRuntime()) {
+    return bridgePaneReadRecent(paneId, lines);
+  }
+  const out = await herdrRun([
+    "pane",
+    "read",
+    paneId,
+    "--lines",
+    String(lines),
+    "--source",
+    "recent-unwrapped",
+    "--format",
+    "ansi",
+  ]);
+  return out;
+}
+
+/** @deprecated Use readPaneVisible or readPaneRecent */
+export async function readPaneAnsi(paneId: string, lines = 24): Promise<string> {
+  return readPaneRecent(paneId, lines);
+}
+
 export async function sendPaneText(paneId: string, text: string) {
   await herdrRun(["pane", "send-text", paneId, text]);
 }
 
+export async function sendPaneKeys(paneId: string, keys: string[]) {
+  if (!keys.length) return;
+  if (isTauriRuntime()) {
+    await bridgePaneSendKeys(paneId, keys);
+    return;
+  }
+  await herdrRun(["pane", "send-keys", paneId, ...keys]);
+}
+
 export async function sendPaneInput(paneId: string, data: string) {
   if (!data) return;
-  await herdrRun(["pane", "send-text", paneId, data]);
+  const input = encodeXtermInput(data);
+  if (input.kind === "keys") {
+    await sendPaneKeys(paneId, input.keys);
+    return;
+  }
+  if (!input.text) return;
+  if (isTauriRuntime()) {
+    await bridgePaneSend(paneId, input.text);
+    return;
+  }
+  await herdrRun(["pane", "send-text", paneId, input.text]);
 }
 
 export async function promptAgent(target: string, text: string) {
@@ -176,9 +223,58 @@ export async function getPaneStatus(paneId: string) {
   return normalizeAgentStatus(pane?.agent_status);
 }
 
-export async function provisionTerminalPane(cwd: string): Promise<HerdrPane> {
+export async function resizePaneTerminal(paneId: string, cols: number, rows: number) {
+  if (isTauriRuntime()) {
+    await bridgePaneResize(paneId, cols, rows);
+    return;
+  }
+  await herdrRun([
+    "terminal",
+    "session",
+    "control",
+    paneId,
+    "--takeover",
+    "--cols",
+    String(cols),
+    "--rows",
+    String(rows),
+  ]);
+}
+
+export async function paneExists(paneId: string): Promise<boolean> {
+  const panes = await listPanes();
+  return panes.some((p) => p.pane_id === paneId);
+}
+
+export async function findReusableCanvasPane(
+  cwd: string,
+  boundPaneIds: ReadonlySet<string>
+): Promise<HerdrPane | null> {
+  const { workspaceId } = await ensureCanvasWorkspace(cwd);
+  const panes = await listPanes();
+  const wsPanes = panes.filter((p) => p.workspace_id === workspaceId);
+  if (wsPanes.length > 10) {
+    console.warn(
+      `[canvas] Herdr workspace has ${wsPanes.length} panes — consider closing stale panes with herdr pane close`
+    );
+  }
+  return wsPanes.find((p) => !boundPaneIds.has(p.pane_id)) ?? null;
+}
+
+export async function provisionTerminalPane(
+  cwd: string,
+  boundPaneIds: string[] = []
+): Promise<HerdrPane> {
+  const bound = new Set(boundPaneIds);
+  const reusable = await findReusableCanvasPane(cwd, bound);
+  if (reusable) {
+    await resizePaneTerminal(reusable.pane_id, 80, 24);
+    return reusable;
+  }
   const { rootPaneId } = await ensureCanvasWorkspace(cwd);
-  return splitPane(rootPaneId, "right");
+  const pane = await splitPane(rootPaneId, "right");
+  await resizePaneTerminal(pane.pane_id, 80, 24);
+  return pane;
 }
 
 export async function dispatchToPane(

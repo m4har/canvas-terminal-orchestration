@@ -26,6 +26,8 @@ export interface TerminalNodeData {
   agentName?: string;
   outputPreview: string;
   lastPrompt?: string;
+  ptyId?: string;
+  herdrBound?: boolean;
 }
 
 export interface MarkdownNodeData {

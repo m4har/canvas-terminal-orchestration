@@ -1,16 +1,34 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { NodeProps } from "@xyflow/react";
 import { useCanvasStore } from "../../../stores/canvasStore";
 import { useTerminalFontSize } from "../../../hooks/useTerminalFontSize";
+import { isHerdrBound, isLocalShell } from "../../../lib/herdr/bind";
+import { getPaneStatus } from "../../../lib/herdr/client";
 import { isRealHerdrPane } from "../../../lib/herdr/dispatch";
+import {
+  deriveHerdrActionLabel,
+  readyStateFromStore,
+} from "../../../lib/herdr/requireHerdr";
 import type { TerminalNodeData } from "../../../lib/types";
 import { XtermView } from "../../terminal/XtermView";
 import { NodeSizeResizer } from "./NodeSizeResizer";
 import { SourceHandle, TargetHandle } from "./NodeHandles";
 import { StatusIcon } from "./StatusIcon";
 
-function PaneIdBadge({ paneId }: { paneId: string }) {
+function PaneIdBadge({ paneId, local }: { paneId: string; local: boolean }) {
   const [copied, setCopied] = useState(false);
+
+  if (local) {
+    return (
+      <span
+        data-testid="terminal-pane-id"
+        title="Local shell — install Herdr to enable handoff"
+        className="ml-auto shrink-0 rounded bg-[var(--muted)] px-1.5 py-0.5 font-mono text-[9px] text-[var(--muted-foreground)]"
+      >
+        local
+      </span>
+    );
+  }
 
   return (
     <button
@@ -37,13 +55,57 @@ export function TerminalNode({
   selected,
 }: NodeProps & { data: TerminalNodeData }) {
   const updateTerminal = useCanvasStore((s) => s.updateTerminalNode);
+  const bindHerdr = useCanvasStore((s) => s.bindHerdr);
+  const herdrOnline = useCanvasStore((s) => s.herdrOnline);
+  const herdrLifecycle = useCanvasStore((s) => s.herdrLifecycle);
   const { fontSize } = useTerminalFontSize();
   const [editingLabel, setEditingLabel] = useState(false);
+  const terminalSizeRef = useRef({ cols: 80, rows: 24 });
+
+  const handlePtyId = useCallback(
+    (ptyId: string) => {
+      if (data.ptyId !== ptyId) {
+        updateTerminal(id, { ptyId });
+      }
+    },
+    [data.ptyId, id, updateTerminal]
+  );
+
+  const handleTerminalSize = useCallback((cols: number, rows: number) => {
+    terminalSizeRef.current = { cols, rows };
+  }, []);
+
+  const handleBindHerdr = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const { cols, rows } = terminalSizeRef.current;
+    const ptyId = data.ptyId ?? "mock-pty";
+    bindHerdr(id, ptyId, cols, rows);
+  };
+
+  useEffect(() => {
+    if (!isHerdrBound(data) || !isRealHerdrPane(data.herdrPaneId)) return;
+
+    const poll = async () => {
+      const status = await getPaneStatus(data.herdrPaneId);
+      if (status !== data.status) {
+        updateTerminal(id, { status });
+      }
+    };
+
+    void poll();
+    const timer = window.setInterval(() => void poll(), 2000);
+    return () => window.clearInterval(timer);
+  }, [data.herdrBound, data.herdrPaneId, data.status, id, updateTerminal]);
 
   const startEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
     setEditingLabel(true);
   };
+
+  const local = isLocalShell(data);
+  const binding = data.status === "working" && local;
+  const herdrState = readyStateFromStore(herdrOnline, herdrLifecycle);
+  const bindLabel = deriveHerdrActionLabel(herdrState, binding);
 
   return (
     <div
@@ -86,17 +148,32 @@ export function TerminalNode({
             {data.agentKind}
           </span>
         )}
-        {data.status === "working" && !isRealHerdrPane(data.herdrPaneId) ? (
-          <span className="shrink-0 text-[9px] text-[var(--warning)]">connecting</span>
+        {local && bindLabel ? (
+          <button
+            type="button"
+            data-testid="terminal-bind-herdr"
+            disabled={binding}
+            className="nodrag nopan nowheel shrink-0 rounded border border-[var(--border)] px-1.5 py-0.5 text-[9px] text-[var(--muted-foreground)] hover:text-[var(--foreground)] disabled:opacity-50"
+            onClick={handleBindHerdr}
+          >
+            {bindLabel}
+          </button>
         ) : null}
-        <PaneIdBadge paneId={data.herdrPaneId} />
+        {binding ? (
+          <span className="shrink-0 text-[9px] text-[var(--warning)]">binding…</span>
+        ) : null}
+        <PaneIdBadge paneId={data.herdrPaneId} local={local} />
       </div>
       <XtermView
-        paneId={data.herdrPaneId}
+        ptyId={data.ptyId}
+        cwd={data.cwd}
         fallbackText={data.outputPreview || `$ ${data.label}\n`}
         lines={10}
         fontSize={fontSize}
         active={!!selected}
+        onPtyId={handlePtyId}
+        onTerminalSize={handleTerminalSize}
+        herdrBound={isHerdrBound(data)}
         className="min-h-0 flex-1 border-t border-[var(--border)] bg-transparent p-1"
       />
     </div>

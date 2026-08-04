@@ -22,8 +22,11 @@ Ubiquitous language for Canvas Orchestra Loop Engineer. Implementation details b
 
 | Term | Definition |
 |------|------------|
-| **TerminalNode** | A canvas node bound to a **Herdr pane** (PTY session). Starts as a plain shell — the user freely starts any agent runtime inside it (`pi`, `opencode`, `claude`, etc.) via Herdr. Displays live pane output and agent status when an agent is active. |
-| **Pane** | A Herdr terminal session. One TerminalNode maps to exactly one pane ID. Source of truth for terminal output. |
+| **TerminalNode** | A canvas node with an embedded local PTY (LocalShell) or a Herdr-bound session (HerdrBound). Starts as a plain local shell for instant I/O; user may bind to a Herdr pane for agent orchestration. Displays live PTY output and agent status when bound. |
+| **LocalShell** | TerminalNode mode before Herdr bind — embedded PTY only, badge shows `local`. |
+| **HerdrBound** | TerminalNode whose PTY runs inside a Herdr pane via exec takeover; pane ID required for handoff and status poll. |
+| **Bind Herdr** | User or handoff action that provisions a pane ID (if missing) and exec-takeovers the active PTY into that pane. |
+| **Pane** | A Herdr terminal session. Required only after bind — one TerminalNode maps to one pane ID when HerdrBound. Source of truth for agent lifecycle; display I/O flows through the embedded PTY. |
 | **MarkdownNode** | A canvas node holding spec, instructions, or context to be sent to a downstream pane via handoff. |
 | **Inspector** | A side panel (not a canvas node) shown when a TerminalNode is selected. Displays working directory, folder tree, and git status. |
 
@@ -43,13 +46,16 @@ Ubiquitous language for Canvas Orchestra Loop Engineer. Implementation details b
 
 | Term | Definition |
 |------|------------|
-| **HerdrBridge** | The Tauri Rust layer that connects to Herdr via `connect_or_spawn()`, creates panes, reads pane output, and queries agent status. |
-| **Herdr** | External terminal multiplexer providing real PTY sessions, agent lifecycle state, and a JSON socket API. Source of truth for live terminal output and inter-agent communication. Canvas does not embed or replace Herdr — it supervises and routes context between panes. |
+| **Herdr** | External terminal multiplexer providing agent lifecycle state and a JSON socket API. Canvas embeds a local PTY for interactive I/O; Herdr owns pane lifecycle and agent semantics after bind. |
+| **HerdrPresent** | A Herdr binary is available to Canvas — on the user PATH or in app-managed storage after download. |
+| **HerdrConnected** | The Herdr server is running and HerdrBridge has an active socket connection. |
+| **HerdrBridge** | The Tauri Rust layer that resolves the Herdr binary, runs `connect_or_spawn()`, holds a persistent socket to Herdr, and exposes pane I/O to the frontend. Tracks whether Canvas spawned the server so shutdown only kills sidecar-spawned sessions. |
 
 ## Responsibility Split
 
 | Layer | Owns |
 |-------|------|
-| **Herdr** | PTY sessions, agent runtimes, agent-to-agent prompts, lifecycle state (`idle` / `working` / `blocked` / `done`) |
-| **Canvas Orchestra** | Visual layout, context routing (handoff/trigger), status display, workflow persistence |
+| **Canvas PTY** | Interactive terminal I/O (LocalShell and HerdrBound display path) |
+| **Herdr** | Pane lifecycle after bind, agent runtimes, agent-to-agent prompts, lifecycle state (`idle` / `working` / `blocked` / `done`) |
+| **Canvas Orchestra** | Herdr lifecycle (binary install, server spawn/shutdown), lazy bind, visual layout, context routing (handoff/trigger), status display, workflow persistence |
 | **MarkdownNode** | Spec/plan source of truth on canvas |

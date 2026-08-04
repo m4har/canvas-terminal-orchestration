@@ -14,7 +14,7 @@ Adopt a **Cobalt + Cream** color system via [`shared/design-tokens.css`](../../s
 - Light-first cream neutrals with cobalt accent
 - Semantic status colors: working (cobalt), done (green), blocked (amber), idle (muted)
 - Dark mode via `.dark` class, same token names
-- Landing and app both import the shared file
+- Landing and app both import the shared file (`landing/` vendors a copy at `landing/src/design-tokens.css` for Railway deploy; kept in sync via `npm run sync:tokens`)
 
 Phased rollout: landing first, then desktop app.
 

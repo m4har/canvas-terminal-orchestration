@@ -17,6 +17,29 @@ export function isTauriRuntime(): boolean {
   return typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 }
 
+export const APP_SETTING_INTRO_COMPLETED = "intro_completed";
+
+function appSettingStorageKey(key: string) {
+  return `canvas-orchestra:setting:${key}`;
+}
+
+export async function getAppSetting(key: string): Promise<string | null> {
+  if (isTauriRuntime()) {
+    return invoke<string | null>("get_app_setting", { key });
+  }
+
+  return localStorage.getItem(appSettingStorageKey(key));
+}
+
+export async function setAppSetting(key: string, value: string): Promise<void> {
+  if (isTauriRuntime()) {
+    await invoke("set_app_setting", { key, value });
+    return;
+  }
+
+  localStorage.setItem(appSettingStorageKey(key), value);
+}
+
 export async function loadCanvas(
   workflowId: string
 ): Promise<{ nodes: CanvasNodeDto[]; edges: CanvasEdgeDto[] }> {

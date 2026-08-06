@@ -63,4 +63,24 @@ mod tests {
         assert_eq!(edges[0].target_node_id, "n2");
         assert_eq!(edges[0].edge_type, "handoff");
     }
+
+    #[test]
+    fn saves_and_loads_app_settings() {
+        let repo = in_memory_repo();
+        repo.init_schema().unwrap();
+
+        assert_eq!(repo.get_setting("intro_completed").unwrap(), None);
+
+        repo.set_setting("intro_completed", "true").unwrap();
+        assert_eq!(
+            repo.get_setting("intro_completed").unwrap(),
+            Some("true".to_string())
+        );
+
+        repo.set_setting("intro_completed", "false").unwrap();
+        assert_eq!(
+            repo.get_setting("intro_completed").unwrap(),
+            Some("false".to_string())
+        );
+    }
 }

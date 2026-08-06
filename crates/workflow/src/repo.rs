@@ -46,7 +46,28 @@ impl WorkflowRepo {
                 type TEXT NOT NULL,
                 payload_json TEXT
             );
+            CREATE TABLE IF NOT EXISTS app_settings (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            );
             ",
+        )?;
+        Ok(())
+    }
+
+    pub fn get_setting(&self, key: &str) -> Result<Option<String>> {
+        let mut stmt = self.conn.prepare("SELECT value FROM app_settings WHERE key = ?1")?;
+        let mut rows = stmt.query_map(params![key], |row| row.get(0))?;
+        match rows.next() {
+            Some(row) => Ok(Some(row?)),
+            None => Ok(None),
+        }
+    }
+
+    pub fn set_setting(&self, key: &str, value: &str) -> Result<()> {
+        self.conn.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value) VALUES (?1, ?2)",
+            params![key, value],
         )?;
         Ok(())
     }

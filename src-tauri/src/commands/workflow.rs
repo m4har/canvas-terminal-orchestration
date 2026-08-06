@@ -100,3 +100,25 @@ pub fn save_canvas(state: State<'_, AppState>, payload: SaveCanvasRequest) -> Re
 
     Ok(())
 }
+
+#[tauri::command]
+pub fn get_project_cwd(state: State<'_, AppState>) -> Result<String, String> {
+    Ok(state.project_cwd.clone())
+}
+
+#[tauri::command]
+pub fn get_app_setting(state: State<'_, AppState>, key: String) -> Result<Option<String>, String> {
+    let repo = state.repo.lock().map_err(|e| e.to_string())?;
+    repo.get_setting(&key).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn set_app_setting(
+    state: State<'_, AppState>,
+    key: String,
+    value: String,
+) -> Result<(), String> {
+    let repo = state.repo.lock().map_err(|e| e.to_string())?;
+    repo.set_setting(&key, &value).map_err(|e| e.to_string())?;
+    Ok(())
+}

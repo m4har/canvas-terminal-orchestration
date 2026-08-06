@@ -40,6 +40,13 @@ vi.mock("../lib/herdr/bind", () => ({
   isHerdrBound: (data: { herdrBound?: boolean }) => data.herdrBound === true,
 }));
 
+vi.mock("../lib/workflow", () => ({
+  setAppSetting: vi.fn().mockResolvedValue(undefined),
+  saveCanvas: vi.fn().mockResolvedValue(undefined),
+  APP_SETTING_INTRO_COMPLETED: "intro_completed",
+  isTauriRuntime: vi.fn(() => false),
+}));
+
 import {
   createSquareFlowNode,
   createTextFlowNode,
@@ -52,6 +59,7 @@ describe("canvasStore", () => {
       nodes: [],
       edges: [],
       initialized: false,
+      introActive: false,
       herdrOnline: null,
       herdrLifecycle: null,
       handoff: { open: false, targetId: null, payload: "" },
@@ -230,6 +238,27 @@ describe("canvasStore", () => {
     await Promise.resolve();
 
     expect(useCanvasStore.getState().herdrInstall.open).toBe(true);
+  });
+
+  it("completeIntro clears canvas when starting blank", async () => {
+    useCanvasStore.getState().loadDemoWorkflow();
+    useCanvasStore.setState({ introActive: true });
+    useCanvasStore.getState().completeIntro(false);
+
+    const { nodes, edges, introActive } = useCanvasStore.getState();
+    expect(nodes).toHaveLength(0);
+    expect(edges).toHaveLength(0);
+    expect(introActive).toBe(false);
+  });
+
+  it("completeIntro keeps demo when requested", () => {
+    useCanvasStore.getState().loadDemoWorkflow();
+    const before = useCanvasStore.getState().nodes.length;
+    useCanvasStore.setState({ introActive: true });
+    useCanvasStore.getState().completeIntro(true);
+
+    expect(useCanvasStore.getState().nodes.length).toBe(before);
+    expect(useCanvasStore.getState().introActive).toBe(false);
   });
 });
 

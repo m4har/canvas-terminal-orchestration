@@ -14,6 +14,7 @@ use pty::PtyManager;
 
 pub struct AppState {
     pub repo: Mutex<WorkflowRepo>,
+    pub project_cwd: String,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -25,8 +26,12 @@ pub fn run() {
             std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
             let db_path = dir.join("canvas.db");
             let repo = workflow::open_db(&db_path).map_err(|e| e.to_string())?;
+            let project_cwd = std::env::current_dir()
+                .map(|p| p.to_string_lossy().to_string())
+                .unwrap_or_else(|_| "/".to_string());
             app.manage(AppState {
                 repo: Mutex::new(repo),
+                project_cwd,
             });
             app.manage(HerdrState {
                 bridge: Mutex::new(HerdrBridge::new(dir)),
@@ -39,6 +44,9 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::workflow::load_canvas,
             commands::workflow::save_canvas,
+            commands::workflow::get_project_cwd,
+            commands::workflow::get_app_setting,
+            commands::workflow::set_app_setting,
             commands::herdr::herdr_status,
             commands::herdr::herdr_ensure_present,
             commands::herdr::herdr_connect,

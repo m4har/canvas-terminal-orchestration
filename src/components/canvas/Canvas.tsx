@@ -14,19 +14,24 @@ import { useCanvasStore } from "../../stores/canvasStore";
 import { useTheme } from "../theme/ThemeProvider";
 import { HandoffEdge } from "./edges/HandoffEdge";
 import { HandoffDialog } from "./HandoffDialog";
+import { PlayDialog } from "./PlayDialog";
+import { AgentInspector, AgentPicker } from "../agent/AgentPicker";
+import { SettingsDialog } from "../settings/SettingsDialog";
 import { HerdrInstallDialog } from "./HerdrInstallDialog";
 import { MarkdownEditorDialog } from "../markdown/MarkdownEditorDialog";
+import { AgentNode } from "./nodes/AgentNode";
 import { MarkdownNode } from "./nodes/MarkdownNode";
 import { SquareNode } from "./nodes/SquareNode";
 import { TerminalNode } from "./nodes/TerminalNode";
 import { TextNode } from "./nodes/TextNode";
-import type { MarkdownNodeData, TerminalNodeData } from "../../lib/types";
+import type { AgentNodeData, MarkdownNodeData, TerminalNodeData } from "../../lib/types";
 
 const nodeTypes = {
   text: TextNode,
   square: SquareNode,
   terminal: TerminalNode,
   markdown: MarkdownNode,
+  agent: AgentNode,
 };
 
 const edgeTypes = {
@@ -38,13 +43,24 @@ export function Canvas() {
   const nodes = useCanvasStore((state) => state.nodes);
   const edges = useCanvasStore((state) => state.edges);
   const handoff = useCanvasStore((state) => state.handoff);
+  const play = useCanvasStore((state) => state.play);
   const markdownEditor = useCanvasStore((state) => state.markdownEditor);
+  const agentPicker = useCanvasStore((state) => state.agentPicker);
+  const agentInspector = useCanvasStore((state) => state.agentInspector);
+  const settings = useCanvasStore((state) => state.settings);
   const herdrInstall = useCanvasStore((state) => state.herdrInstall);
   const setNodes = useCanvasStore((state) => state.setNodes);
   const setEdges = useCanvasStore((state) => state.setEdges);
   const openHandoff = useCanvasStore((state) => state.openHandoff);
   const closeHandoff = useCanvasStore((state) => state.closeHandoff);
   const sendHandoff = useCanvasStore((state) => state.sendHandoff);
+  const closePlay = useCanvasStore((state) => state.closePlay);
+  const runPlay = useCanvasStore((state) => state.runPlay);
+  const closeAgentPicker = useCanvasStore((state) => state.closeAgentPicker);
+  const bindAgentToNode = useCanvasStore((state) => state.bindAgentToNode);
+  const closeAgentInspector = useCanvasStore((state) => state.closeAgentInspector);
+  const updateAgentNode = useCanvasStore((state) => state.updateAgentNode);
+  const closeSettings = useCanvasStore((state) => state.closeSettings);
   const closeMarkdownEditor = useCanvasStore((state) => state.closeMarkdownEditor);
   const updateMarkdownNode = useCanvasStore((state) => state.updateMarkdownNode);
   const closeHerdrInstall = useCanvasStore((state) => state.closeHerdrInstall);
@@ -101,6 +117,15 @@ export function Canvas() {
   );
 
   const targetNode = nodes.find((n) => n.id === handoff.targetId);
+  const playTarget = nodes.find((n) => n.id === play.targetId);
+  const playLabel =
+    playTarget?.type === "agent" ? (playTarget.data as AgentNodeData).label : "agent";
+
+  const inspectorNode = nodes.find((n) => n.id === agentInspector.nodeId);
+  const inspectorAgentId =
+    inspectorNode?.type === "agent"
+      ? (inspectorNode.data as AgentNodeData).orchestraAgentId
+      : null;
   const targetLabel =
     targetNode?.type === "terminal"
       ? (targetNode.data as TerminalNodeData).label
@@ -144,6 +169,42 @@ export function Canvas() {
         onClose={closeHandoff}
         onSend={sendHandoff}
       />
+
+      <PlayDialog
+        key={`play-${play.targetId ?? "closed"}`}
+        open={play.open}
+        targetLabel={playLabel}
+        payload={play.payload}
+        onClose={closePlay}
+        onPlay={runPlay}
+      />
+
+      <AgentPicker
+        open={agentPicker.open}
+        onClose={closeAgentPicker}
+        onSelect={(agent) => {
+          if (agentPicker.pendingNodeId) {
+            bindAgentToNode(agentPicker.pendingNodeId, agent);
+          }
+        }}
+      />
+
+      <AgentInspector
+        open={agentInspector.open}
+        agentId={inspectorAgentId}
+        onClose={closeAgentInspector}
+        onUpdated={(agent) => {
+          if (agentInspector.nodeId) {
+            updateAgentNode(agentInspector.nodeId, {
+              orchestraAgentSlug: agent.slug,
+              profileId: agent.profile_id,
+              label: agent.slug,
+            });
+          }
+        }}
+      />
+
+      <SettingsDialog open={settings.open} onClose={closeSettings} />
 
       <HerdrInstallDialog
         open={herdrInstall.open}

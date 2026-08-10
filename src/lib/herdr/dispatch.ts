@@ -1,5 +1,5 @@
 import type { GetState, SetState } from "zustand";
-import { bindHerdrToTerminal, isHerdrBound } from "./bind";
+import { isHerdrBound } from "./bind";
 import {
   dispatchToPane,
   herdrStatus,
@@ -8,7 +8,8 @@ import {
 } from "./client";
 import { connectHerdr } from "./connect";
 import { getProjectCwd } from "./env";
-import { assessHerdrReady } from "./requireHerdr";
+import { orchestratorDispatch } from "../orchestrator/client";
+import { isTauriRuntime } from "../workflow";
 import { isAutomationMode } from "../runtimeFlags";
 import type { TerminalNodeData } from "../types";
 
@@ -157,23 +158,35 @@ export async function runHandoff(
   const data = node.data as TerminalNodeData;
 
   if (!isHerdrBound(data)) {
-    const { state } = await assessHerdrReady(true);
-    if (state !== "ready") {
-      get().openHerdrInstall({
-        reason: "handoff",
-        pendingHandoff: { terminalId, prompt },
+    if (!isTauriRuntime()) {
+      simulateAgentRun(get, set, terminalId, prompt);
+      return;
+    }
+
+    const ptyId = data.ptyId;
+    if (!ptyId) {
+      get().updateTerminalNode(terminalId, {
+        status: "blocked",
+        outputPreview: "$ no pty — open terminal first\n",
       });
       return;
     }
-    const ptyId = data.ptyId ?? "mock-pty";
-    const paneId = await bindHerdrToTerminal(get, terminalId, ptyId);
-    if (!paneId) {
-      get().openHerdrInstall({
-        reason: "handoff",
-        pendingHandoff: { terminalId, prompt },
+
+    get().updateTerminalNode(terminalId, {
+      status: "working",
+      lastPrompt: prompt,
+      outputPreview: `$ handoff\n> ${prompt.slice(0, 80)}...`,
+    });
+
+    try {
+      await orchestratorDispatch(ptyId, prompt, data.agentKind);
+    } catch (err) {
+      get().updateTerminalNode(terminalId, {
+        status: "blocked",
+        outputPreview: `handoff error: ${err instanceof Error ? err.message : String(err)}`,
       });
-      return;
     }
+    return;
   }
 
   const refreshed = get().nodes.find((n) => n.id === terminalId);

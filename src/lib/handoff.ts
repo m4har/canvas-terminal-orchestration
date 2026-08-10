@@ -1,5 +1,5 @@
 import type { Edge, Node } from "@xyflow/react";
-import type { MarkdownNodeData, TerminalNodeData } from "./types";
+import type { AgentNodeData, MarkdownNodeData, TerminalNodeData } from "./types";
 
 export function buildHandoffPayload(
   source: Node | undefined,
@@ -18,6 +18,15 @@ export function buildHandoffPayload(
     return `Continue from upstream terminal (${data.label}):\n\n${tail}`;
   }
 
+  return "";
+}
+
+export function buildPlayPayload(source: Node | undefined): string {
+  if (!source) return "";
+  if (source.type === "markdown") {
+    const data = source.data as MarkdownNodeData;
+    return `# ${data.title}\n\n${data.content}`;
+  }
   return "";
 }
 

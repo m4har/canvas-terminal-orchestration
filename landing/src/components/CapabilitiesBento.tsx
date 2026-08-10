@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Reveal } from "./motion/Reveal";
+import { MockProfilesSettings } from "./mock/MockProfilesSettings";
 
 const PROMPTS = [
-  "Split login API into auth service...",
-  "Refactor JWT middleware for /api/v2...",
-  "Build login form with useAuth hook...",
+  "Break down Auth Refactor into FE and BE tasks...",
+  "Acceptance: JWT on /api/v2/auth, login form with useAuth...",
+  "Mirror plan to pane-implement for parallel handoff...",
 ];
 
 const STATUSES = [
-  { pane: "pane-planner", state: "working", runtime: "opencode" },
-  { pane: "pane-fe", state: "idle", runtime: "pi" },
-  { pane: "pane-be", state: "done", runtime: "opencode" },
+  { pane: "agent-planner", state: "working", runtime: "orchestra" },
+  { pane: "pane-implement", state: "idle", runtime: "claude" },
+  { pane: "pane-fe", state: "done", runtime: "pi" },
 ];
 
 function TypewriterPrompt() {
@@ -43,7 +44,7 @@ function TypewriterPrompt() {
 
   return (
     <div className="font-mono text-xs">
-      <span className="text-[var(--muted-foreground)]">herdr agent prompt </span>
+      <span className="text-[var(--muted-foreground)]">orchestra_agent_play </span>
       <span className="text-[var(--accent)]">planner</span>
       <span className="text-[var(--muted-foreground)]"> &quot;</span>
       <span>{text}</span>
@@ -94,31 +95,6 @@ function LiveStatusList() {
   );
 }
 
-function MetricTicker() {
-  const [count, setCount] = useState(847);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setCount((c) => c + Math.floor(Math.random() * 3));
-    }, 1200);
-    return () => clearInterval(id);
-  }, []);
-
-  return (
-    <AnimatePresence mode="popLayout">
-      <motion.span
-        key={count}
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 8 }}
-        className="font-mono text-4xl font-medium tracking-tighter text-[var(--accent)]"
-      >
-        {count.toLocaleString()}
-      </motion.span>
-    </AnimatePresence>
-  );
-}
-
 export function CapabilitiesBento() {
   return (
     <section className="pb-24">
@@ -139,7 +115,7 @@ export function CapabilitiesBento() {
               </div>
             </div>
             <p className="mt-3 pl-1 font-mono text-[10px] text-[var(--muted-foreground)]">
-              Handoff prompt composition
+              Play prompt composition
             </p>
           </Reveal>
 
@@ -158,17 +134,17 @@ export function CapabilitiesBento() {
           </Reveal>
 
           <Reveal className="lg:col-span-4" delay={0.15}>
-            <div className="glass-panel rounded-[2rem] p-8">
+            <div className="glass-panel flex h-full min-h-[280px] flex-col rounded-[2rem] p-4">
               <p className="font-mono text-[10px] uppercase tracking-widest text-[var(--muted-foreground)]">
-                Lines streamed
+                Profile editor
               </p>
-              <div className="mt-4">
-                <MetricTicker />
+              <div className="mt-3 min-h-0 flex-1">
+                <MockProfilesSettings />
               </div>
-              <p className="mt-2 text-xs text-[var(--muted-foreground)]">
-                terminal output this session
-              </p>
             </div>
+            <p className="mt-3 pl-1 font-mono text-[10px] text-[var(--muted-foreground)]">
+              Duplicate bundled · attach global skills
+            </p>
           </Reveal>
 
           <Reveal className="lg:col-span-8" delay={0.25}>
@@ -177,7 +153,7 @@ export function CapabilitiesBento() {
                 Stack
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                {["Tauri 2", "React 19", "@xyflow/react", "Herdr", "SQLite", "xterm.js", "Zustand"].map(
+                {["Tauri 2", "React 19", "@xyflow/react", "Herdr", "SQLite", "SKILL.md", "Zustand"].map(
                   (tech) => (
                     <span
                       key={tech}

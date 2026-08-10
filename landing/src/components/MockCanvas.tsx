@@ -2,29 +2,20 @@ import { Reveal } from "./motion/Reveal";
 import { MockToolbar } from "./mock/MockToolbar";
 import { MockSquare } from "./mock/MockSquare";
 import { MockMarkdownNode } from "./mock/MockMarkdownNode";
+import { MockAgentNode } from "./mock/MockAgentNode";
 import { MockTerminalNode } from "./mock/MockTerminalNode";
 import { MockHandoffEdge, MockEdgeDefs } from "./mock/MockHandoffEdge";
 import { MockCanvasStage } from "./mock/MockCanvasStage";
 import { CANVAS_W, CANVAS_H, DEMO_LAYOUT, DEMO_EDGES } from "./mock/layout";
+import { DEMO_AGENT_PREVIEW, DEMO_TERMINAL_PREVIEWS } from "../lib/demo-layout";
 
-const PLANNER_LINES = [
-  "$ herdr agent start opencode --kind planner",
-  "Reading Auth Refactor Plan...",
-  "Splitting tasks: FE login UI, BE JWT API",
-  "Handing off to pane-fe and pane-be",
-];
+const AGENT_LINES = DEMO_AGENT_PREVIEW.split("\n");
 
-const FE_LINES = [
-  "$ herdr agent start pi --kind fe",
-  "Building login form component...",
-  "Added useAuth hook",
-];
+const IMPLEMENT_LINES = DEMO_TERMINAL_PREVIEWS.implement.split("\n");
 
-const BE_LINES = [
-  "$ herdr agent start opencode --kind be",
-  "Splitting login API route...",
-  "JWT middleware wired",
-];
+const FE_LINES = DEMO_TERMINAL_PREVIEWS.fe.split("\n");
+
+const BE_LINES = DEMO_TERMINAL_PREVIEWS.be.split("\n");
 
 function pxBox(box: { x: number; y: number; w: number; h: number }) {
   return {
@@ -42,11 +33,11 @@ export function MockCanvas() {
         <Reveal>
           <div className="mb-10 max-w-xl">
             <h2 className="text-3xl font-semibold tracking-tighter md:text-4xl">
-              Auth Refactor workflow
+              Auth Refactor orchestration
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-[var(--muted-foreground)]">
-              A real layout from the demo canvas. Status badges cycle, terminal
-              output streams, handoff edges pulse.
+              Spec to Planner agent to terminal mirror to parallel branches.
+              Profiles and skills load from Settings before Play.
             </p>
           </div>
         </Reveal>
@@ -93,12 +84,20 @@ export function MockCanvas() {
 
                 <MockMarkdownNode style={pxBox(DEMO_LAYOUT.mdPlan)} />
 
-                <MockTerminalNode
+                <MockAgentNode
                   label="Planner"
-                  paneId="pane-planner"
-                  lines={PLANNER_LINES}
-                  delayMs={0}
-                  style={pxBox(DEMO_LAYOUT.planner)}
+                  slug="planner"
+                  lines={AGENT_LINES}
+                  delayMs={400}
+                  style={pxBox(DEMO_LAYOUT.agentPlanner)}
+                />
+
+                <MockTerminalNode
+                  label="Implement (Claude)"
+                  paneId="pane-implement"
+                  lines={IMPLEMENT_LINES}
+                  delayMs={800}
+                  style={pxBox(DEMO_LAYOUT.implement)}
                 />
 
                 <MockTerminalNode
@@ -122,7 +121,7 @@ export function MockCanvas() {
         </Reveal>
 
         <p className="mt-4 pl-1 font-mono text-[10px] text-[var(--muted-foreground)]">
-          demo-workflow.ts · MarkdownNode → Planner → parallel FE / BE
+          demo-workflow.ts · Spec → Agent → Terminal → parallel FE / BE
         </p>
       </div>
     </section>

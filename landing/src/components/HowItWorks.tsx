@@ -4,22 +4,24 @@ import { Reveal, Stagger, StaggerItem } from "./motion/Reveal";
 
 const STEPS = [
   {
-    step: "01",
     title: "Layout",
     description:
-      "Place Terminal, Markdown, Square, and Text nodes on an infinite canvas. Group by project with visual frames.",
+      "Place Markdown, Agent, Terminal, Square, and Text nodes on an infinite canvas. Group by project with visual frames.",
   },
   {
-    step: "02",
+    title: "Configure",
+    description:
+      "Open Settings to duplicate bundled profiles, edit system prompts, and pick skills from ~/.agents/skills or create new SKILL.md files.",
+  },
+  {
+    title: "Play",
+    description:
+      "Connect spec to AgentNode and hit Play. OrchestraAgent streams a response headless, with optional mirror to a Herdr pane.",
+  },
+  {
     title: "Supervise",
     description:
-      "Watch live Herdr pane output and agent status badges. See idle, working, blocked, and done at a glance.",
-  },
-  {
-    step: "03",
-    title: "Hand off",
-    description:
-      "Draw edges and send composed prompts to downstream agents. Route specs from MarkdownNodes to terminal panes.",
+      "Watch live pane output and status badges. Route work downstream with handoff edges between terminals.",
   },
 ];
 
@@ -37,7 +39,7 @@ export function HowItWorks() {
         <Reveal>
           <div className="mb-14">
             <h2 className="text-3xl font-semibold tracking-tighter md:text-4xl">
-              Three moves to
+              Four moves to
               <br />
               orchestrate
             </h2>
@@ -46,16 +48,13 @@ export function HowItWorks() {
 
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-20">
           <Stagger className="relative space-y-10" stagger={0.15}>
-            {STEPS.map(({ step, title, description }) => (
-              <StaggerItem key={step}>
-                <div className="flex gap-6">
-                  <span className="font-mono text-sm text-[var(--accent)]">{step}</span>
-                  <div>
-                    <h3 className="text-xl font-medium tracking-tight">{title}</h3>
-                    <p className="mt-2 max-w-md text-sm leading-relaxed text-[var(--muted-foreground)]">
-                      {description}
-                    </p>
-                  </div>
+            {STEPS.map(({ title, description }) => (
+              <StaggerItem key={title}>
+                <div>
+                  <h3 className="text-xl font-medium tracking-tight">{title}</h3>
+                  <p className="mt-2 max-w-md text-sm leading-relaxed text-[var(--muted-foreground)]">
+                    {description}
+                  </p>
                 </div>
               </StaggerItem>
             ))}
@@ -69,10 +68,10 @@ export function HowItWorks() {
               />
             </div>
             <div className="space-y-16 pl-12">
-              {STEPS.map(({ step, title }) => (
-                <div key={step} className="flex items-center gap-4">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--muted)] font-mono text-xs">
-                    {step}
+              {STEPS.map(({ title }) => (
+                <div key={title} className="flex items-center gap-4">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--muted)] text-xs font-medium">
+                    {title.charAt(0)}
                   </span>
                   <span className="text-lg font-medium">{title}</span>
                 </div>

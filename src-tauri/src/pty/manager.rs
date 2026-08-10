@@ -8,6 +8,7 @@ use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 use tauri::{AppHandle, Emitter};
 
 use crate::herdr::session::HerdrSessionHandle;
+use crate::orchestrator;
 use crate::pty::PtyOutputEvent;
 
 static PTY_COUNTER: AtomicU64 = AtomicU64::new(1);
@@ -93,10 +94,11 @@ impl PtyManager {
                             "pty-output",
                             PtyOutputEvent {
                                 pty_id: output_id.clone(),
-                                data,
+                                data: data.clone(),
                                 full: false,
                             },
                         );
+                        orchestrator::on_pty_output(&app_handle, &output_id, &data);
                     }
                     Err(_) => break,
                 }

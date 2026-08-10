@@ -118,28 +118,29 @@ describe("canvasStore", () => {
     useCanvasStore.getState().loadDemoWorkflow();
 
     const { nodes, edges } = useCanvasStore.getState();
-    expect(nodes.length).toBeGreaterThanOrEqual(6);
-    expect(edges).toHaveLength(3);
+    expect(nodes.length).toBeGreaterThanOrEqual(7);
+    expect(edges).toHaveLength(4);
   });
 
-  it("opens handoff with markdown payload for connected terminal", () => {
+  it("opens handoff with upstream terminal payload for fe", () => {
     useCanvasStore.getState().loadDemoWorkflow();
-    useCanvasStore.getState().openHandoff("term-planner");
+    useCanvasStore.getState().openHandoff("term-fe");
 
     const { handoff } = useCanvasStore.getState();
     expect(handoff.open).toBe(true);
-    expect(handoff.payload).toContain("Auth Refactor Plan");
+    expect(handoff.payload).toContain("Implement (Claude)");
   });
 
-  it("sendHandoff opens herdr install when herdr missing", async () => {
+  it("sendHandoff dispatches locally without Herdr when unbound", async () => {
     useCanvasStore.getState().loadDemoWorkflow();
-    useCanvasStore.getState().openHandoff("term-planner");
+    useCanvasStore.getState().openHandoff("term-fe");
     useCanvasStore.getState().sendHandoff("implement auth");
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(useCanvasStore.getState().herdrInstall.open).toBe(true);
-    expect(useCanvasStore.getState().herdrInstall.reason).toBe("handoff");
+    expect(useCanvasStore.getState().herdrInstall.open).toBe(false);
+    const terminal = useCanvasStore.getState().nodes.find((n) => n.id === "term-fe");
+    expect(terminal?.data).toMatchObject({ status: "working" });
   });
 
   it("bindHerdr opens install modal when herdr missing", async () => {
@@ -171,7 +172,7 @@ describe("canvasStore", () => {
     useCanvasStore.getState().loadDemoWorkflow();
     useCanvasStore.setState({
       nodes: useCanvasStore.getState().nodes.map((n) =>
-        n.id === "term-planner" && n.type === "terminal"
+        n.id === "term-fe" && n.type === "terminal"
           ? {
               ...n,
               data: {
@@ -183,14 +184,14 @@ describe("canvasStore", () => {
           : n
       ),
     });
-    useCanvasStore.getState().openHandoff("term-planner");
+    useCanvasStore.getState().openHandoff("term-fe");
     useCanvasStore.getState().sendHandoff("implement auth");
     await Promise.resolve();
     await Promise.resolve();
     await Promise.resolve();
 
     expect(dispatchToPane).toHaveBeenCalled();
-    const terminal = useCanvasStore.getState().nodes.find((n) => n.id === "term-planner");
+    const terminal = useCanvasStore.getState().nodes.find((n) => n.id === "term-fe");
     expect(terminal?.data).toMatchObject({ status: "working" });
   });
 
@@ -231,13 +232,17 @@ describe("canvasStore", () => {
     });
   });
 
-  it("runParallelFanOut opens install modal when herdr missing", async () => {
+  it("runParallelFanOut dispatches to local terminals without Herdr", async () => {
     useCanvasStore.getState().loadDemoWorkflow();
     useCanvasStore.getState().runParallelFanOut();
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(useCanvasStore.getState().herdrInstall.open).toBe(true);
+    expect(useCanvasStore.getState().herdrInstall.open).toBe(false);
+    const fe = useCanvasStore.getState().nodes.find((n) => n.id === "term-fe");
+    const be = useCanvasStore.getState().nodes.find((n) => n.id === "term-be");
+    expect(fe?.data).toMatchObject({ status: "working" });
+    expect(be?.data).toMatchObject({ status: "working" });
   });
 
   it("completeIntro clears canvas when starting blank", async () => {
@@ -259,6 +264,29 @@ describe("canvasStore", () => {
 
     expect(useCanvasStore.getState().nodes.length).toBe(before);
     expect(useCanvasStore.getState().introActive).toBe(false);
+  });
+
+  it("writes agent output to downstream markdown on recap", () => {
+    useCanvasStore.getState().loadDemoWorkflow();
+    useCanvasStore.setState({
+      edges: [
+        ...useCanvasStore.getState().edges,
+        {
+          id: "e-planner-recap",
+          source: "agent-planner",
+          target: "md-spec",
+          type: "handoff",
+        },
+      ],
+    });
+
+    useCanvasStore.getState().writeAgentOutputToMarkdown("agent-planner", "Task breakdown complete.");
+
+    const md = useCanvasStore.getState().nodes.find((n) => n.id === "md-spec");
+    expect(md?.data).toMatchObject({
+      content: expect.stringContaining("## Agent output"),
+    });
+    expect((md?.data as { content: string }).content).toContain("Task breakdown complete.");
   });
 });
 

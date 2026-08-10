@@ -1,5 +1,5 @@
 import { GITHUB_URL } from "../lib/constants";
-import { CanvastorLogo } from "@brand/CanvastorLogo";
+import { CanvastorLogo } from "../brand/CanvastorLogo";
 
 export function Footer() {
   return (

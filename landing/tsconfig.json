@@ -10,10 +10,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "isolatedModules": true,
-    "resolveJsonModule": true,
-    "paths": {
-      "@brand/*": ["../shared/brand/*"]
-    }
+    "resolveJsonModule": true
   },
-  "include": ["src", "../shared/brand"]
+  "include": ["src"]
 }

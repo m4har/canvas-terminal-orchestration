@@ -7,6 +7,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const copies = [
   ["shared/design-tokens.css", "landing/src/design-tokens.css"],
   ["shared/demo-layout.ts", "landing/src/lib/demo-layout.ts"],
+  ["shared/brand/CanvastorLogo.tsx", "landing/src/brand/CanvastorLogo.tsx"],
   ["shared/brand/icon.svg", "public/favicon.svg"],
   ["shared/brand/icon.svg", "landing/public/favicon.svg"],
 ];

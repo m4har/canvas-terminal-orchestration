@@ -2,6 +2,14 @@
 
 Static marketing site for [Canvastor](https://github.com/m4har/canvas-terminal-orchestration).
 
+![Canvastor landing — hero](screenshot/landing-hero.png)
+
+## Screenshots
+
+| Hero | Auth Refactor orchestration (dark) | Agent Profiles |
+|---|---|---|
+| ![Hero](screenshot/landing-hero.png) | ![Orchestration mock](screenshot/landing-hero-dark.png) | ![Profiles settings](screenshot/landing-profiles.png) |
+
 ## Local development
 
 ```bash
@@ -18,6 +26,14 @@ Open http://localhost:5173
 npm run build
 npm run preview
 ```
+
+From the repo root:
+
+```bash
+npm run build:landing
+```
+
+Shared brand assets (`CanvastorLogo`, design tokens, demo layout) are vendored into `landing/src/` via `npm run sync:tokens` so Railway can build with **Root Directory** set to `landing` only.
 
 ## Deploy to Railway
 

@@ -8,7 +8,7 @@
 
 ADR 0002 fixed per-keystroke CLI spawning and introduced a persistent Herdr socket. Terminal output still polled at 150–500ms through `pane.read`, causing visible typing lag. [Orca](https://github.com/stablyai/orca) embeds `node-pty` in the main process and streams bytes directly to xterm — zero poll.
 
-Canvas Orchestra must keep Herdr for orchestration (pane lifecycle, agent prompt, status) but not proxy interactive I/O through the multiplexer socket.
+Canvastor must keep Herdr for orchestration (pane lifecycle, agent prompt, status) but not proxy interactive I/O through the multiplexer socket.
 
 ## Decision
 

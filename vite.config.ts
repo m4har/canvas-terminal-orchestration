@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { resolve } from "node:path";
 import { herdrApiPlugin } from "./vite-plugin-herdr";
 
 const host = process.env.TAURI_DEV_HOST;
@@ -8,6 +9,11 @@ const e2eDev = process.env.E2E === "1";
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), herdrApiPlugin()],
+  resolve: {
+    alias: {
+      "@brand": resolve(__dirname, "shared/brand"),
+    },
+  },
   clearScreen: false,
   server: {
     port: 5173,

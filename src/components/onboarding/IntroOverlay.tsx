@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
+import { CanvastorLogo } from "@brand/CanvastorLogo";
 import { useCanvasStore } from "../../stores/canvasStore";
 
 const MODAL_STEPS = [
   {
-    title: "Canvas Orchestra",
+    title: "Canvastor",
     body: "A visual orchestration layer for AI coding agents. Layout workflows on a canvas, run headless OrchestraAgents in-app, and route work via Herdr.",
   },
   {
@@ -146,7 +147,13 @@ export function IntroOverlay() {
           aria-label="Intro"
         >
           <div className="w-full max-w-md rounded-lg border border-[var(--border)] bg-[var(--background)] p-4 shadow-xl">
-            <h2 className="mb-2 text-sm font-semibold">{modal.title}</h2>
+            {step === 0 ? (
+              <div className="mb-3">
+                <CanvastorLogo iconSize={28} />
+              </div>
+            ) : (
+              <h2 className="mb-2 text-sm font-semibold">{modal.title}</h2>
+            )}
             <p className="text-sm text-[var(--muted-foreground)]">{modal.body}</p>
             <div className="mt-4 flex justify-between gap-2">
               {step > 0 ? (

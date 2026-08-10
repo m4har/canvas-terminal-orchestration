@@ -1,4 +1,4 @@
-# PRD — Canvas Orchestra Loop Engineer
+# PRD — Canvastor
 
 **Status:** Final  
 **Version:** 0.1  
@@ -21,7 +21,7 @@ Users need a **visual canvas** where agents, specs, and project boundaries are l
 
 ## 2. Solution Overview
 
-**Canvas Orchestra Loop Engineer** is a desktop app (Tauri) that provides a visual workflow canvas for orchestrating AI coding agents via [Herdr](https://herdr.dev/).
+**Canvastor** is a desktop app (Tauri) that provides a visual workflow canvas for orchestrating AI coding agents via [Herdr](https://herdr.dev/).
 
 Core value proposition:
 

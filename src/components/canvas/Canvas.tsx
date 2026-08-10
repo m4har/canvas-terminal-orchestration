@@ -181,6 +181,7 @@ export function Canvas() {
 
       <AgentPicker
         open={agentPicker.open}
+        pendingNodeId={agentPicker.pendingNodeId}
         onClose={closeAgentPicker}
         onSelect={(agent) => {
           if (agentPicker.pendingNodeId) {

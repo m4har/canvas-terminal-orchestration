@@ -7,6 +7,8 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const copies = [
   ["shared/design-tokens.css", "landing/src/design-tokens.css"],
   ["shared/demo-layout.ts", "landing/src/lib/demo-layout.ts"],
+  ["shared/brand/icon.svg", "public/favicon.svg"],
+  ["shared/brand/icon.svg", "landing/public/favicon.svg"],
 ];
 
 for (const [from, to] of copies) {

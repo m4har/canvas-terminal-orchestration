@@ -1,10 +1,10 @@
-# Canvas Orchestra
+# Canvastor
 
 Visual workflow canvas for orchestrating AI coding agents via [Herdr](https://herdr.dev/).
 
 Design your agent layout on a canvas, see every agent's status live, and hand off work between agents with one click. Group agents by project using visual frames — without giving up real terminal sessions.
 
-![Canvas Orchestra — Auth Refactor demo workflow](screenshot/readme-orchestra-complete.png)
+![Canvastor — Auth Refactor demo workflow](screenshot/readme-orchestra-complete.png)
 
 ## Features
 
@@ -81,7 +81,7 @@ npm run tauri:build
 ## How It Works
 
 ```
-Canvas Orchestra (visual layout + context routing)
+Canvastor (visual layout + context routing)
         │
         │  Tauri invoke()
         ▼

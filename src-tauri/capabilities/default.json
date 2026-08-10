@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Default capabilities for Canvas Orchestra",
+  "description": "Default capabilities for Canvastor",
   "windows": ["main"],
   "permissions": ["core:default", "opener:default"]
 }

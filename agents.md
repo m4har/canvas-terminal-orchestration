@@ -1,4 +1,4 @@
-# Agents — Canvas Orchestra Loop Engineer
+# Agents — Canvastor
 
 **Version:** 0.1  
 **Last updated:** 2026-08-01  
@@ -10,7 +10,7 @@ This document defines the architecture, behavior, and operating rules for all AI
 
 ## 1. Executive Summary
 
-Canvas Orchestra Loop Engineer is a visual orchestration layer for AI coding agents. It does not embed or replace agent runtimes. Instead, it:
+Canvastor is a visual orchestration layer for AI coding agents. It does not embed or replace agent runtimes. Instead, it:
 
 - Binds **TerminalNodes** on a canvas to live Herdr panes running CLI agents (Claude Code, Codex, OpenCode, and others).
 - Stores **MarkdownNodes** as specs and context to be handed off downstream.
@@ -23,9 +23,9 @@ Canvas Orchestra Loop Engineer is a visual orchestration layer for AI coding age
 |-------------|------|---------|
 | **Orchestrated agents** | Execute coding tasks in real PTY sessions, bound to canvas TerminalNodes | Herdr (`herdr agent start`, `herdr agent prompt`) |
 | **Development agents** | Implement features, fix bugs, write tests for this repository | Cursor IDE, Claude Code, Codex, or any Herdr-supported runtime |
-| **Coordinator (human or agent)** | Layout workflows on canvas, compose handoff prompts, override stuck states | Canvas Orchestra UI |
+| **Coordinator (human or agent)** | Layout workflows on canvas, compose handoff prompts, override stuck states | Canvastor UI |
 
-Agents are the execution engine. Canvas Orchestra is the supervision and routing layer. Herdr is the source of truth for terminal output and agent lifecycle state.
+Agents are the execution engine. Canvastor is the supervision and routing layer. Herdr is the source of truth for terminal output and agent lifecycle state.
 
 **Non-goals (v0.1):**
 
@@ -80,7 +80,7 @@ Agents **must not**:
 
 ### 2.4 Agent Status Semantics
 
-Runtime agents report state via Herdr. Canvas Orchestra maps these to TerminalNode badges:
+Runtime agents report state via Herdr. Canvastor maps these to TerminalNode badges:
 
 | Herdr state | UI icon (Phosphor) | Meaning |
 |-------------|-------------------|---------|
@@ -108,7 +108,7 @@ Herdr provides the tool surface for orchestrated agents. Supported runtimes:
 | `pi` | Pi | Lightweight tasks |
 | `omp` | Oh-My-Posit | Shell-adjacent workflows |
 
-**Herdr commands used by Canvas Orchestra (v0.1):**
+**Herdr commands used by Canvastor (v0.1):**
 
 ```bash
 herdr workspace create --cwd <path> --label <name>   # New agent pane with cwd
@@ -296,13 +296,13 @@ Before acting on any task, agents **must** consult:
 
 | Data | Persisted | Source of truth |
 |------|-----------|-----------------|
-| Node positions, sizes, config | SQLite (`canvas.db`) | Canvas Orchestra |
-| MarkdownNode content | SQLite | Canvas Orchestra |
-| TerminalNode ↔ pane bindings | SQLite | Canvas Orchestra |
+| Node positions, sizes, config | SQLite (`canvas.db`) | Canvastor |
+| MarkdownNode content | SQLite | Canvastor |
+| TerminalNode ↔ pane bindings | SQLite | Canvastor |
 | Terminal output transcripts | **Not persisted** | Herdr |
 | Agent lifecycle state | **Not persisted** | Herdr (polled) |
 | Git status | **Not persisted** | Live `git status` on Inspector open |
-| Theme preference | localStorage / SQLite | Canvas Orchestra |
+| Theme preference | localStorage / SQLite | Canvastor |
 
 ### 5.3 Tech Stack Rules
 

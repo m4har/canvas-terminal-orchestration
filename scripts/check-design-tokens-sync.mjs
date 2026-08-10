@@ -7,6 +7,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const pairs = [
   ["shared/design-tokens.css", "landing/src/design-tokens.css"],
   ["shared/demo-layout.ts", "landing/src/lib/demo-layout.ts"],
+  ["shared/brand/CanvastorLogo.tsx", "landing/src/brand/CanvastorLogo.tsx"],
 ];
 
 for (const [from, to] of pairs) {

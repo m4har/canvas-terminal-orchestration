@@ -1,5 +1,5 @@
 import { GithubLogo, ArrowUpRight, Moon, Sun } from "@phosphor-icons/react";
-import { CanvastorLogo } from "@brand/CanvastorLogo";
+import { CanvastorLogo } from "../brand/CanvastorLogo";
 import { GITHUB_URL } from "../lib/constants";
 import { useLandingTheme } from "./theme/LandingThemeProvider";
 

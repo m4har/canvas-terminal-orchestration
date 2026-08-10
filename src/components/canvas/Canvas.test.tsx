@@ -68,7 +68,7 @@ describe("Canvas", () => {
   it("registers all mvp node types", () => {
     renderCanvas();
     const flow = screen.getByTestId("react-flow");
-    expect(flow.getAttribute("data-node-types")).toBe("text,square,terminal,markdown");
+    expect(flow.getAttribute("data-node-types")).toBe("text,square,terminal,markdown,agent");
   });
 
   it("renders nodes from store", () => {

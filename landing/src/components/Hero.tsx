@@ -27,9 +27,9 @@ export function Hero() {
             transition={{ ...spring, delay: 0.2 }}
             className="text-4xl font-semibold tracking-tighter leading-none md:text-6xl"
           >
-            See every agent.
+            Orchestrate agents.
             <br />
-            <span className="text-[var(--muted-foreground)]">Hand off</span>
+            <span className="text-[var(--muted-foreground)]">Play</span>
             <br />
             with one click.
           </motion.h1>
@@ -40,9 +40,9 @@ export function Hero() {
             transition={{ ...spring, delay: 0.35 }}
             className="mt-6 max-w-[48ch] text-base leading-relaxed text-[var(--muted-foreground)]"
           >
-            Canvas Orchestra is a visual workflow canvas for orchestrating AI
-            coding agents via Herdr. Design your layout, supervise live terminal
-            sessions, and route context between agents.
+            Canvas Orchestra is a visual workflow canvas for AI coding agents.
+            Configure AgentProfiles and skills, run OrchestraAgents headless, and
+            route specs downstream.
           </motion.p>
 
           <motion.div
@@ -76,8 +76,8 @@ export function Hero() {
             className="mt-12 grid grid-cols-3 gap-6 border-t border-[var(--border)] pt-8"
           >
             {[
-              { label: "Node types", value: "4" },
-              { label: "Poll interval", value: "2s" },
+              { label: "Node types", value: "5" },
+              { label: "Bundled profiles", value: "7" },
               { label: "Runtime", value: "Tauri" },
             ].map(({ label, value }) => (
               <div key={label}>
@@ -113,7 +113,7 @@ export function Hero() {
             </div>
           </div>
           <p className="mt-4 pl-2 font-mono text-[10px] text-[var(--muted-foreground)]">
-            auth-refactor.workflow · 3 panes active
+            auth-refactor.workflow · spec → agent → terminal
           </p>
         </motion.div>
       </div>
@@ -123,10 +123,11 @@ export function Hero() {
 
 function HeroMiniCanvas() {
   const nodes = [
-    { label: "Plan", x: "8%", y: "15%", w: "38%", h: "35%", type: "md" },
-    { label: "Planner", x: "55%", y: "15%", w: "38%", h: "35%", type: "term", status: "working" },
-    { label: "FE (Pi)", x: "20%", y: "58%", w: "35%", h: "32%", type: "term", status: "idle" },
-    { label: "BE", x: "58%", y: "58%", w: "35%", h: "32%", type: "term", status: "done" },
+    { label: "Spec", x: "6%", y: "15%", w: "26%", h: "35%", type: "md" },
+    { label: "Planner", x: "36%", y: "15%", w: "26%", h: "35%", type: "agent", status: "working" },
+    { label: "Implement", x: "66%", y: "15%", w: "28%", h: "35%", type: "term", status: "idle" },
+    { label: "FE (Pi)", x: "18%", y: "58%", w: "32%", h: "32%", type: "term", status: "idle" },
+    { label: "BE", x: "56%", y: "58%", w: "32%", h: "32%", type: "term", status: "done" },
   ];
 
   return (
@@ -148,22 +149,36 @@ function HeroMiniCanvas() {
           style={{ left: n.x, top: n.y, width: n.w, height: n.h }}
         >
           <div className="flex items-center gap-1.5 border-b border-[var(--border)] px-2 py-1">
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${
-                n.status === "working"
-                  ? "bg-[var(--status-working)] animate-pulse-ring"
-                  : n.status === "done"
-                    ? "bg-[var(--status-done)]"
-                    : "bg-[var(--status-idle)]"
-              }`}
-            />
+            {n.type === "agent" ? (
+              <span className="text-[8px] text-[var(--muted-foreground)]">◇</span>
+            ) : (
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  n.status === "working"
+                    ? "bg-[var(--status-working)] animate-pulse-ring"
+                    : n.status === "done"
+                      ? "bg-[var(--status-done)]"
+                      : "bg-[var(--status-idle)]"
+                }`}
+              />
+            )}
             <span className="text-[9px] font-medium">{n.label}</span>
+            {n.type === "agent" && (
+              <span className="ml-auto rounded bg-[var(--muted)] px-1 font-mono text-[6px] text-[var(--muted-foreground)]">
+                planner
+              </span>
+            )}
           </div>
           {n.type === "md" ? (
             <div className="p-1.5 font-mono text-[7px] leading-relaxed text-[var(--muted-foreground)]">
               <p># Auth Refactor</p>
               <p className="mt-0.5">1. Split login API</p>
               <p>2. Build login UI</p>
+            </div>
+          ) : n.type === "agent" ? (
+            <div className="p-1.5 font-mono text-[7px] text-[var(--muted-foreground)]">
+              <p>Reading spec...</p>
+              <p>Tasks: FE, BE</p>
             </div>
           ) : (
             <div className="p-1.5 font-mono text-[7px] text-[var(--muted-foreground)]">
@@ -174,7 +189,7 @@ function HeroMiniCanvas() {
       ))}
       <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 400 300">
         <path
-          d="M 160 90 C 190 90, 210 90, 220 90"
+          d="M 128 97 C 136 97, 140 97, 144 97"
           fill="none"
           stroke="var(--edge-stroke)"
           strokeWidth="1"
@@ -182,22 +197,31 @@ function HeroMiniCanvas() {
           className="animate-dash-flow"
         />
         <path
-          d="M 280 130 C 280 150, 200 160, 200 175"
+          d="M 248 97 C 254 97, 258 97, 264 97"
           fill="none"
           stroke="var(--edge-stroke)"
           strokeWidth="1"
           strokeDasharray="4 3"
           className="animate-dash-flow"
-          style={{ animationDelay: "0.4s" }}
+          style={{ animationDelay: "0.3s" }}
         />
         <path
-          d="M 280 130 C 280 150, 280 160, 280 175"
+          d="M 320 142 C 320 155, 102 165, 102 174"
           fill="none"
           stroke="var(--edge-stroke)"
           strokeWidth="1"
           strokeDasharray="4 3"
           className="animate-dash-flow"
-          style={{ animationDelay: "0.8s" }}
+          style={{ animationDelay: "0.6s" }}
+        />
+        <path
+          d="M 320 142 C 320 155, 280 165, 280 174"
+          fill="none"
+          stroke="var(--edge-stroke)"
+          strokeWidth="1"
+          strokeDasharray="4 3"
+          className="animate-dash-flow"
+          style={{ animationDelay: "0.9s" }}
         />
       </svg>
     </>

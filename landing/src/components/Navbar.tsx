@@ -21,6 +21,9 @@ export function Navbar() {
             <a href="#demo" className="transition-colors hover:text-[var(--accent)]">
               Demo
             </a>
+            <a href="#profiles" className="transition-colors hover:text-[var(--accent)]">
+              Profiles
+            </a>
             <a href="#capabilities" className="transition-colors hover:text-[var(--accent)]">
               Capabilities
             </a>

@@ -1,4 +1,5 @@
 import type {
+  AgentNodeData,
   CanvasNode,
   FlowNode,
   MarkdownNodeData,
@@ -65,6 +66,31 @@ export function createMarkdownNodeData(
   return {
     title: input.title ?? "Spec",
     content: input.content ?? "# Task\n\nDescribe the work here.",
+  };
+}
+
+export function createAgentNodeData(
+  input: Pick<AgentNodeData, "label" | "orchestraAgentId" | "cwd"> &
+    Partial<
+      Pick<
+        AgentNodeData,
+        | "orchestraAgentSlug"
+        | "profileId"
+        | "status"
+        | "lastResponsePreview"
+        | "streamingResponse"
+      >
+    >
+): AgentNodeData {
+  return {
+    label: input.label,
+    orchestraAgentId: input.orchestraAgentId,
+    orchestraAgentSlug: input.orchestraAgentSlug,
+    profileId: input.profileId,
+    cwd: input.cwd,
+    status: input.status ?? "idle",
+    lastResponsePreview: input.lastResponsePreview,
+    streamingResponse: input.streamingResponse,
   };
 }
 

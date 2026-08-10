@@ -9,10 +9,22 @@ export function isValidHandoffConnection(
   if (!source || !target || source === target) return false;
   if (!sourceNode || !targetNode) return false;
 
-  if (targetNode.type !== "terminal") return false;
+  if (targetNode.type === "terminal") {
+    if (sourceNode.type === "markdown") return true;
+    if (sourceNode.type === "terminal") return true;
+    if (sourceNode.type === "agent") return true;
+    return false;
+  }
 
-  if (sourceNode.type === "markdown") return true;
-  if (sourceNode.type === "terminal") return true;
+  if (targetNode.type === "agent") {
+    if (sourceNode.type === "markdown") return true;
+    return false;
+  }
+
+  if (targetNode.type === "markdown") {
+    if (sourceNode.type === "agent") return true;
+    return false;
+  }
 
   return false;
 }
@@ -48,4 +60,29 @@ export function createHandoffEdge(connection: Connection): Edge {
     label: "handoff",
     animated: true,
   };
+}
+
+export function findMirrorTerminalId(
+  edges: Edge[],
+  agentNodeId: string,
+  nodes: Node[]
+): string | undefined {
+  const outgoing = edges.filter((e) => e.source === agentNodeId);
+  for (const edge of outgoing) {
+    const target = nodes.find((n) => n.id === edge.target);
+    if (target?.type === "terminal") return edge.target;
+  }
+  return undefined;
+}
+
+export function findDownstreamMarkdownIds(
+  edges: Edge[],
+  agentNodeId: string,
+  nodes: Node[]
+): string[] {
+  return edges
+    .filter((e) => e.source === agentNodeId)
+    .map((e) => nodes.find((n) => n.id === e.target))
+    .filter((n): n is Node => n?.type === "markdown")
+    .map((n) => n.id);
 }

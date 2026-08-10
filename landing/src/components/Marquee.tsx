@@ -1,14 +1,14 @@
 const TERMS = [
-  "TerminalNode",
+  "AgentNode",
+  "OrchestraAgent",
+  "AgentProfile",
+  "SKILL.md",
+  "Play",
   "Handoff",
-  "HerdrBridge",
+  "Settings",
+  "TerminalNode",
   "MarkdownNode",
-  "Inspector",
-  "Pane",
-  "Trigger",
-  "Force Done",
-  "Square Frame",
-  "Agent Status",
+  "HerdrBridge",
 ];
 
 export function Marquee() {

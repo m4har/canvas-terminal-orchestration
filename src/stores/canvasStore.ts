@@ -2,26 +2,32 @@ import { create } from "zustand";
 import type { Edge, Node } from "@xyflow/react";
 import { runInstallViaApp } from "../lib/herdr/install";
 import { createDemoWorkflow } from "../lib/demoWorkflow";
-import { buildHandoffPayload, findEdgeSource } from "../lib/handoff";
-import { bindHerdrToTerminal } from "../lib/herdr/bind";
+import { buildHandoffPayload, buildPlayPayload, findEdgeSource } from "../lib/handoff";
+import { findDownstreamMarkdownIds, findMirrorTerminalId } from "../lib/edgeRules";
+import { playOrchestraAgent, type OrchestraAgent } from "../lib/orchestra/client";
+import { bindHerdrToTerminal, isLocalShell } from "../lib/herdr/bind";
 import { runHandoff } from "../lib/herdr/dispatch";
 import { getProjectCwd } from "../lib/herdr/env";
 import { assessHerdrReady } from "../lib/herdr/requireHerdr";
 import type { HerdrInstallReason } from "../lib/herdr/requireHerdr";
 import { refreshHerdrConnection } from "../hooks/useHerdrConnection";
+import { orchestratorForceDone } from "../lib/orchestrator/client";
 import {
   APP_SETTING_INTRO_COMPLETED,
+  isTauriRuntime,
   saveCanvas,
   setAppSetting,
 } from "../lib/workflow";
 import { setPendingHmrCanvasSnapshot } from "../lib/hmrCanvasSnapshot";
 import {
+  createAgentNodeData,
   createMarkdownNodeData,
   createSquareNodeData,
   createTerminalNodeData,
   createTextNodeData,
 } from "../lib/nodes";
 import type { HerdrLifecycle } from "../lib/herdr/status";
+import type { AgentNodeData, MarkdownNodeData, SquareNodeData, TerminalNodeData, TextNodeData } from "../lib/types";
 
 export type { HerdrInstallReason };
 
@@ -51,6 +57,26 @@ interface HandoffState {
   open: boolean;
   targetId: string | null;
   payload: string;
+}
+
+interface PlayState {
+  open: boolean;
+  targetId: string | null;
+  payload: string;
+}
+
+interface AgentPickerState {
+  open: boolean;
+  pendingNodeId: string | null;
+}
+
+interface AgentInspectorState {
+  open: boolean;
+  nodeId: string | null;
+}
+
+interface SettingsState {
+  open: boolean;
 }
 
 interface MarkdownEditorState {
@@ -85,7 +111,11 @@ interface CanvasState {
   herdrOnline: boolean | null;
   herdrLifecycle: HerdrLifecycle | null;
   handoff: HandoffState;
+  play: PlayState;
   markdownEditor: MarkdownEditorState;
+  agentPicker: AgentPickerState;
+  agentInspector: AgentInspectorState;
+  settings: SettingsState;
   herdrInstall: HerdrInstallState;
   addTextNode: (label?: string, fontSize?: number, position?: { x: number; y: number }) => void;
   addSquareNode: (
@@ -99,7 +129,9 @@ interface CanvasState {
     position?: { x: number; y: number }
   ) => void;
   addMarkdownNode: (title?: string, position?: { x: number; y: number }) => void;
+  addAgentNode: (position?: { x: number; y: number }) => void;
   updateMarkdownNode: (id: string, patch: Partial<MarkdownNodeData>) => void;
+  updateAgentNode: (id: string, patch: Partial<AgentNodeData>) => void;
   updateTextNode: (id: string, patch: Partial<TextNodeData>) => void;
   updateSquareNode: (id: string, patch: Partial<SquareNodeData>) => void;
   updateTerminalNode: (id: string, patch: Partial<TerminalNodeData>) => void;
@@ -108,6 +140,17 @@ interface CanvasState {
   runParallelFanOut: () => void;
   closeHandoff: () => void;
   sendHandoff: (text: string) => void;
+  openPlay: (targetId: string) => void;
+  closePlay: () => void;
+  runPlay: (text: string) => void;
+  writeAgentOutputToMarkdown: (agentNodeId: string, fullResponse: string) => void;
+  openAgentPicker: (nodeId: string) => void;
+  closeAgentPicker: () => void;
+  bindAgentToNode: (nodeId: string, agent: OrchestraAgent) => void;
+  openAgentInspector: (nodeId: string) => void;
+  closeAgentInspector: () => void;
+  openSettings: () => void;
+  closeSettings: () => void;
   openMarkdownEditor: (nodeId: string) => void;
   closeMarkdownEditor: () => void;
   forceDone: (terminalId: string) => void;
@@ -178,6 +221,25 @@ export function createTerminalFlowNode(
   };
 }
 
+export function createAgentFlowNode(
+  agent: OrchestraAgent,
+  position = { x: 240, y: 200 }
+): Node<AgentNodeData> {
+  return {
+    id: nextId("agent"),
+    type: "agent",
+    position,
+    style: { width: 280, height: 200 },
+    data: createAgentNodeData({
+      label: agent.slug,
+      orchestraAgentId: agent.id,
+      orchestraAgentSlug: agent.slug,
+      profileId: agent.profile_id,
+      cwd: getProjectCwd(),
+    }),
+  };
+}
+
 export function createMarkdownFlowNode(
   title = "Spec",
   position = { x: 120, y: 120 }
@@ -222,7 +284,11 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   herdrOnline: null,
   herdrLifecycle: null,
   handoff: { open: false, targetId: null, payload: "" },
+  play: { open: false, targetId: null, payload: "" },
   markdownEditor: { open: false, nodeId: null },
+  agentPicker: { open: false, pendingNodeId: null },
+  agentInspector: { open: false, nodeId: null },
+  settings: { open: false },
   herdrInstall: { ...CLOSED_HERDR_INSTALL },
 
   addTextNode: (label = "Label", fontSize = 18, position) => {
@@ -253,6 +319,34 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     const pos = position ?? { x: 100 + offset, y: 100 + offset };
     set({
       nodes: [...get().nodes, createMarkdownFlowNode(title, pos)],
+    });
+  },
+
+  addAgentNode: (position) => {
+    const offset = get().nodes.length * 20;
+    const pos = position ?? { x: 240 + offset, y: 160 + offset };
+    const id = nextId("agent");
+    const node: Node<AgentNodeData> = {
+      id,
+      type: "agent",
+      position: pos,
+      style: { width: 280, height: 200 },
+      data: createAgentNodeData({
+        label: "Agent",
+        orchestraAgentId: "",
+        cwd: getProjectCwd(),
+      }),
+    };
+    set({ nodes: [...get().nodes, node], agentPicker: { open: true, pendingNodeId: id } });
+  },
+
+  updateAgentNode: (id, patch) => {
+    set({
+      nodes: get().nodes.map((n) =>
+        n.id === id && n.type === "agent"
+          ? { ...n, data: { ...(n.data as AgentNodeData), ...patch } }
+          : n
+      ),
     });
   },
 
@@ -364,8 +458,110 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     get().closeHandoff();
   },
 
+  openPlay: (targetId) => {
+    const target = get().nodes.find((n) => n.id === targetId);
+    if (!target || target.type !== "agent") return;
+    const data = target.data as AgentNodeData;
+    if (!data.orchestraAgentId) {
+      get().openAgentPicker(targetId);
+      return;
+    }
+    const edge = findEdgeSource(get().edges, targetId);
+    const source = edge ? get().nodes.find((n) => n.id === edge.source) : undefined;
+    const payload = buildPlayPayload(source);
+    set({ play: { open: true, targetId, payload } });
+  },
+
+  closePlay: () => set({ play: { open: false, targetId: null, payload: "" } }),
+
+  runPlay: (text) => {
+    const { targetId } = get().play;
+    if (!targetId) return;
+    const node = get().nodes.find((n) => n.id === targetId);
+    if (!node || node.type !== "agent") return;
+    const data = node.data as AgentNodeData;
+    const mirrorTerminalId = findMirrorTerminalId(get().edges, targetId, get().nodes);
+    const mirrorNode = mirrorTerminalId
+      ? get().nodes.find((n) => n.id === mirrorTerminalId)
+      : undefined;
+    const mirrorPtyId =
+      mirrorNode?.type === "terminal"
+        ? (mirrorNode.data as TerminalNodeData).ptyId
+        : undefined;
+
+    get().updateAgentNode(targetId, { status: "working", streamingResponse: "" });
+    get().closePlay();
+
+    if (isTauriRuntime()) {
+      void playOrchestraAgent({
+        agentId: data.orchestraAgentId,
+        nodeId: targetId,
+        cwd: data.cwd,
+        prompt: text,
+        mirrorPtyId,
+      }).catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : String(err);
+        get().updateAgentNode(targetId, {
+          status: "idle",
+          streamingResponse: "",
+          lastResponsePreview: `Play failed: ${message}`,
+        });
+      });
+    }
+  },
+
+  writeAgentOutputToMarkdown: (agentNodeId, fullResponse) => {
+    const { edges, nodes } = get();
+    const markdownIds = findDownstreamMarkdownIds(edges, agentNodeId, nodes);
+    for (const mdId of markdownIds) {
+      const node = nodes.find((n) => n.id === mdId);
+      if (!node || node.type !== "markdown") continue;
+      const data = node.data as MarkdownNodeData;
+      const block = `## Agent output\n\n${fullResponse}`;
+      const content = data.content.trim()
+        ? `${data.content.trim()}\n\n${block}`
+        : block;
+      get().updateMarkdownNode(mdId, { content });
+    }
+  },
+
+  openAgentPicker: (nodeId) => set({ agentPicker: { open: true, pendingNodeId: nodeId } }),
+  closeAgentPicker: () => set({ agentPicker: { open: false, pendingNodeId: null } }),
+
+  bindAgentToNode: (nodeId, agent) => {
+    get().updateAgentNode(nodeId, {
+      orchestraAgentId: agent.id,
+      orchestraAgentSlug: agent.slug,
+      profileId: agent.profile_id,
+      label: agent.slug,
+    });
+    get().closeAgentPicker();
+  },
+
+  openAgentInspector: (nodeId) => {
+    const node = get().nodes.find((n) => n.id === nodeId);
+    if (!node || node.type !== "agent") return;
+    const data = node.data as AgentNodeData;
+    if (!data.orchestraAgentId) {
+      get().openAgentPicker(nodeId);
+      return;
+    }
+    set({ agentInspector: { open: true, nodeId } });
+  },
+
+  closeAgentInspector: () => set({ agentInspector: { open: false, nodeId: null } }),
+
+  openSettings: () => set({ settings: { open: true } }),
+  closeSettings: () => set({ settings: { open: false } }),
+
   forceDone: (terminalId) => {
+    const node = get().nodes.find((n) => n.id === terminalId);
+    if (!node || node.type !== "terminal") return;
+    const data = node.data as TerminalNodeData;
     get().updateTerminalNode(terminalId, { status: "done" });
+    if (isLocalShell(data) && data.ptyId && isTauriRuntime()) {
+      void orchestratorForceDone(data.ptyId);
+    }
   },
 
   openHerdrInstall: (input) => {

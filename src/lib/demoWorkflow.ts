@@ -1,19 +1,21 @@
 import type { Edge, Node } from "@xyflow/react";
 import {
+  DEMO_AGENT_PREVIEW,
   DEMO_LAYOUT,
   DEMO_MARKDOWN_CONTENT,
   DEMO_TERMINAL_PREVIEWS,
 } from "../../shared/demo-layout";
 import {
+  createAgentNodeData,
   createMarkdownNodeData,
   createSquareNodeData,
   createTerminalNodeData,
   createTextNodeData,
 } from "./nodes";
 
-/** Hardcoded hackathon demo: Markdown → Planner → parallel FE/BE */
+/** Demo: Spec → Planner Agent → terminal mirror → parallel FE/BE */
 export function createDemoWorkflow(): { nodes: Node[]; edges: Edge[] } {
-  const { header, square, mdPlan, planner, fe, be } = DEMO_LAYOUT;
+  const { header, square, mdPlan, agentPlanner, implement, fe, be } = DEMO_LAYOUT;
 
   const nodes: Node[] = [
     {
@@ -41,26 +43,41 @@ export function createDemoWorkflow(): { nodes: Node[]; edges: Edge[] } {
       }),
     },
     {
-      id: "md-plan",
+      id: "md-spec",
       type: "markdown",
       position: { x: mdPlan.x, y: mdPlan.y },
       style: { width: mdPlan.w, height: mdPlan.h },
       data: createMarkdownNodeData({
-        title: "Plan",
+        title: "Spec",
         content: DEMO_MARKDOWN_CONTENT,
       }),
     },
     {
-      id: "term-planner",
-      type: "terminal",
-      position: { x: planner.x, y: planner.y },
-      style: { width: planner.w, height: planner.h },
-      data: createTerminalNodeData({
+      id: "agent-planner",
+      type: "agent",
+      position: { x: agentPlanner.x, y: agentPlanner.y },
+      style: { width: agentPlanner.w, height: agentPlanner.h },
+      data: createAgentNodeData({
         label: "Planner",
-        herdrPaneId: "pane-planner",
+        orchestraAgentId: "demo-planner",
+        orchestraAgentSlug: "planner",
+        profileId: "planner",
         cwd: "/project",
-        agentKind: "opencode",
-        outputPreview: DEMO_TERMINAL_PREVIEWS.planner,
+        status: "done",
+        lastResponsePreview: DEMO_AGENT_PREVIEW,
+      }),
+    },
+    {
+      id: "term-implement",
+      type: "terminal",
+      position: { x: implement.x, y: implement.y },
+      style: { width: implement.w, height: implement.h },
+      data: createTerminalNodeData({
+        label: "Implement (Claude)",
+        herdrPaneId: "pane-implement",
+        cwd: "/project",
+        agentKind: "claude",
+        outputPreview: DEMO_TERMINAL_PREVIEWS.implement,
       }),
     },
     {
@@ -93,24 +110,32 @@ export function createDemoWorkflow(): { nodes: Node[]; edges: Edge[] } {
 
   const edges: Edge[] = [
     {
-      id: "e-plan-planner",
-      source: "md-plan",
-      target: "term-planner",
+      id: "e-spec-planner",
+      source: "md-spec",
+      target: "agent-planner",
       type: "handoff",
       label: "handoff",
       animated: true,
     },
     {
-      id: "e-planner-fe",
-      source: "term-planner",
+      id: "e-planner-implement",
+      source: "agent-planner",
+      target: "term-implement",
+      type: "handoff",
+      label: "handoff",
+      animated: true,
+    },
+    {
+      id: "e-implement-fe",
+      source: "term-implement",
       target: "term-fe",
       type: "handoff",
       label: "handoff",
       animated: true,
     },
     {
-      id: "e-planner-be",
-      source: "term-planner",
+      id: "e-implement-be",
+      source: "term-implement",
       target: "term-be",
       type: "handoff",
       label: "handoff",

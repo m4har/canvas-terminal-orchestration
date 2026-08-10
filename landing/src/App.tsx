@@ -4,6 +4,7 @@ import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
 import { Marquee } from "./components/Marquee";
 import { MockCanvas } from "./components/MockCanvas";
+import { ProfilesSection } from "./components/ProfilesSection";
 import { Features } from "./components/Features";
 import { CapabilitiesBento } from "./components/CapabilitiesBento";
 import { HowItWorks } from "./components/HowItWorks";
@@ -19,6 +20,7 @@ export function App() {
         <Hero />
         <Marquee />
         <MockCanvas />
+        <ProfilesSection />
         <Features />
         <CapabilitiesBento />
         <HowItWorks />

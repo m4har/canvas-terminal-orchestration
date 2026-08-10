@@ -1,37 +1,37 @@
-import { Eye, ArrowRight, SquaresFour, GitBranch } from "@phosphor-icons/react";
+import { Eye, Play, Sliders, BookOpenText } from "@phosphor-icons/react";
 import { Reveal, Stagger, StaggerItem } from "./motion/Reveal";
 
 const FEATURES = [
+  {
+    icon: Play,
+    tag: "Orchestration",
+    title: "Headless Play",
+    description:
+      "Run OrchestraAgents in-app. Play prefills from upstream markdown, streams into AgentNode, and optionally mirrors to a Herdr pane.",
+    span: "lg:col-span-7",
+  },
+  {
+    icon: Sliders,
+    tag: "Profiles",
+    title: "Agent Profiles",
+    description:
+      "Duplicate bundled roles in Settings, edit system prompts, and attach skills from ~/.agents/skills. Create SKILL.md files without leaving the app.",
+    span: "lg:col-span-5",
+  },
+  {
+    icon: BookOpenText,
+    tag: "Skills",
+    title: "Global skill discovery",
+    description:
+      "Browse installed skills from npx skills directories, select chips per profile, and resolve SKILL.md at Play time.",
+    span: "lg:col-span-5",
+  },
   {
     icon: Eye,
     tag: "Supervision",
     title: "Visual Supervision",
     description:
       "All agent statuses on one screen. TerminalNode badges show idle, working, blocked, and done, polled every 2 seconds from Herdr.",
-    span: "lg:col-span-7",
-  },
-  {
-    icon: ArrowRight,
-    tag: "Routing",
-    title: "One-Click Handoff",
-    description:
-      "Draw a Handoff edge, compose the prompt in a dialog, and send it to the target pane. MarkdownNode content flows downstream automatically.",
-    span: "lg:col-span-5",
-  },
-  {
-    icon: SquaresFour,
-    tag: "Layout",
-    title: "Project Grouping",
-    description:
-      "Square frames and Text headers organize parallel work. Interior is click-through; only the border stroke is draggable.",
-    span: "lg:col-span-5",
-  },
-  {
-    icon: GitBranch,
-    tag: "Context",
-    title: "Inspector Panel",
-    description:
-      "Click a TerminalNode to see cwd, folder tree, and git status. Read-only workspace context without switching panes.",
     span: "lg:col-span-7",
   },
 ];
@@ -53,8 +53,8 @@ export function Features() {
               </h2>
             </div>
             <p className="max-w-sm text-sm leading-relaxed text-[var(--muted-foreground)]">
-              Canvas Orchestra supervises real Herdr panes. It does not replace
-              your terminal or agent runtime.
+              Canvas Orchestra supervises Herdr panes and headless OrchestraAgents.
+              Configure profiles, skills, and LLM settings in one place.
             </p>
           </div>
         </Reveal>

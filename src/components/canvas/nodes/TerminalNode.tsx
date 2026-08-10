@@ -22,7 +22,7 @@ function PaneIdBadge({ paneId, local }: { paneId: string; local: boolean }) {
     return (
       <span
         data-testid="terminal-pane-id"
-        title="Local shell — install Herdr to enable handoff"
+        title="Local shell — bind Herdr optionally for multiplexer"
         className="ml-auto shrink-0 rounded bg-[var(--muted)] px-1.5 py-0.5 font-mono text-[9px] text-[var(--muted-foreground)]"
       >
         local

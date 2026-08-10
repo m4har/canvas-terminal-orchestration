@@ -1,10 +1,12 @@
 import {
   ArrowsOut,
   FileText,
+  Gear,
   Moon,
   GitBranch,
   PaperPlaneTilt,
   Play,
+  Robot,
   Square,
   Sun,
   Terminal,
@@ -22,6 +24,8 @@ export function CanvasToolbar() {
   const addSquareNode = useCanvasStore((state) => state.addSquareNode);
   const addTerminalNode = useCanvasStore((state) => state.addTerminalNode);
   const addMarkdownNode = useCanvasStore((state) => state.addMarkdownNode);
+  const addAgentNode = useCanvasStore((state) => state.addAgentNode);
+  const openSettings = useCanvasStore((state) => state.openSettings);
   const loadDemoWorkflow = useCanvasStore((state) => state.loadDemoWorkflow);
   const openHandoff = useCanvasStore((state) => state.openHandoff);
   const runParallelFanOut = useCanvasStore((state) => state.runParallelFanOut);
@@ -34,6 +38,7 @@ export function CanvasToolbar() {
   const SQUARE_SIZE = { w: 400, h: 300 };
   const MARKDOWN_SIZE = { w: 256, h: 200 };
   const TERMINAL_SIZE = { w: 288, h: 200 };
+  const AGENT_SIZE = { w: 280, h: 200 };
 
   return (
     <header className="flex h-10 shrink-0 items-center gap-1 border-b border-[var(--border)] px-3">
@@ -77,13 +82,20 @@ export function CanvasToolbar() {
         <Terminal size={16} weight="regular" />
       </ToolbarButton>
 
+      <ToolbarButton
+        label="Add agent"
+        onClick={() => addAgentNode(centerAt(AGENT_SIZE.w, AGENT_SIZE.h))}
+      >
+        <Robot size={16} weight="regular" />
+      </ToolbarButton>
+
       <div className="mx-1 h-5 w-px bg-[var(--border)]" />
 
       <ToolbarButton label="Load demo workflow" onClick={() => { loadDemoWorkflow(); setTimeout(() => fitView({ padding: 0.15 }), 50); }}>
         <Play size={16} weight="regular" />
       </ToolbarButton>
 
-      <ToolbarButton label="Handoff plan to planner" onClick={() => openHandoff("term-planner")}>
+      <ToolbarButton label="Handoff to implement" onClick={() => openHandoff("term-implement")}>
         <PaperPlaneTilt size={16} weight="regular" />
       </ToolbarButton>
 
@@ -119,6 +131,10 @@ export function CanvasToolbar() {
           ))}
         </select>
       </label>
+
+      <ToolbarButton label="Settings" onClick={() => openSettings()}>
+        <Gear size={16} weight="regular" />
+      </ToolbarButton>
 
       <ToolbarButton label="Toggle theme" onClick={toggleTheme}>
         {resolved === "dark" ? (

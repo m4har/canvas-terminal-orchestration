@@ -35,7 +35,7 @@ describe("IntroOverlay", () => {
     fireEvent.click(screen.getByTestId("intro-next"));
     expect(screen.getByText("Node types")).toBeInTheDocument();
     fireEvent.click(screen.getByTestId("intro-next"));
-    expect(screen.getByText("Handoff")).toBeInTheDocument();
+    expect(screen.getByText("Play + Handoff")).toBeInTheDocument();
   });
 
   it("calls completeIntro when user picks start blank", () => {

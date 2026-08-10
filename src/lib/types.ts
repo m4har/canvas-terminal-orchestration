@@ -1,4 +1,4 @@
-export type NodeType = "terminal" | "markdown" | "square" | "text";
+export type NodeType = "terminal" | "markdown" | "square" | "text" | "agent";
 
 export type AgentStatus = "idle" | "working" | "blocked" | "done";
 
@@ -36,6 +36,17 @@ export interface MarkdownNodeData {
   fontSize?: number;
 }
 
+export interface AgentNodeData {
+  label: string;
+  orchestraAgentId: string;
+  orchestraAgentSlug?: string;
+  profileId?: string;
+  cwd: string;
+  status: AgentStatus;
+  lastResponsePreview?: string;
+  streamingResponse?: string;
+}
+
 export interface CanvasNode {
   id: string;
   type: NodeType;
@@ -45,6 +56,7 @@ export interface CanvasNode {
     | SquareNodeData
     | TerminalNodeData
     | MarkdownNodeData
+    | AgentNodeData
     | Record<string, unknown>;
 }
 

@@ -21,6 +21,11 @@ workflow = { path = "../crates/workflow" }
 ureq = { version = "2", default-features = false, features = ["tls"] }
 portable-pty = "0.8"
 base64 = "0.22"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "process", "io-util"] }
+futures = "0.3"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
+uuid = { version = "1", features = ["v4"] }
+dirs = "6"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

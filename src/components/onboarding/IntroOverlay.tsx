@@ -4,33 +4,33 @@ import { useCanvasStore } from "../../stores/canvasStore";
 const MODAL_STEPS = [
   {
     title: "Canvas Orchestra",
-    body: "A visual orchestration layer for AI coding agents. Layout workflows on a canvas and route work between agents via Herdr.",
+    body: "A visual orchestration layer for AI coding agents. Layout workflows on a canvas, run headless OrchestraAgents in-app, and route work via Herdr.",
   },
   {
     title: "Node types",
-    body: "MarkdownNode holds specs and context. TerminalNode runs agents in a PTY. Square frames group areas. Text labels sections.",
+    body: "MarkdownNode holds specs. AgentNode runs OrchestraAgent via Play. TerminalNode mirrors output or runs CLI agents in a PTY. Square and Text organize the canvas.",
   },
   {
-    title: "Handoff",
-    body: "Connect nodes with handoff edges. Compose a prompt in the dialog, then send it to the downstream agent pane.",
+    title: "Play + Handoff",
+    body: "Play prefills from upstream markdown and streams to AgentNode. Connect agent to terminal for mirror output. Handoff edges still route prompts between terminals.",
   },
 ] as const;
 
 const SPOTLIGHT_STEPS = [
   {
-    nodeId: "md-plan",
-    title: "MarkdownNode — Plan",
-    body: "Upstream specs live here. Handoff sends this content to downstream TerminalNodes.",
+    nodeId: "md-spec",
+    title: "MarkdownNode — Spec",
+    body: "Upstream specs live here. Play on a connected AgentNode prefills from this content.",
   },
   {
-    nodeId: "term-planner",
-    title: "TerminalNode — Planner",
-    body: "Agents run in terminal panes. This demo shows mock output — no live Herdr required.",
+    nodeId: "agent-planner",
+    title: "AgentNode — Planner",
+    body: "OrchestraAgent runs headless in-app. Click Play to stream a response. Slug badge shows the registry agent.",
   },
   {
-    nodeId: "term-fe",
-    title: "Fan-out handoff",
-    body: "One planner can hand off to parallel branches (FE and BE). Edges show the routing path.",
+    nodeId: "term-implement",
+    title: "Terminal mirror + fan-out",
+    body: "Optional mirror to a Herdr pane. From here, hand off to parallel branches (FE and BE).",
   },
 ] as const;
 
@@ -182,7 +182,7 @@ export function IntroOverlay() {
           <div className="w-full max-w-md rounded-lg border border-[var(--border)] bg-[var(--background)] p-4 shadow-xl">
             <h2 className="mb-2 text-sm font-semibold">Ready to start</h2>
             <p className="text-sm text-[var(--muted-foreground)]">
-              Keep the Auth Refactor demo as a reference, or start with a blank canvas.
+              Keep the orchestration demo as a reference, or start with a blank canvas.
             </p>
             <div className="mt-4 flex flex-wrap justify-end gap-2">
               <button

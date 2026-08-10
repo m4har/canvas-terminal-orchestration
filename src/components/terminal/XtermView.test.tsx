@@ -32,6 +32,12 @@ vi.mock("../../lib/pty/client", () => ({
   listenPtyOutput: (...args: unknown[]) => listenPtyOutput(...args),
 }));
 
+const readPaneVisible = vi.fn().mockResolvedValue("$ herdr prompt\n");
+
+vi.mock("../../lib/herdr/client", () => ({
+  readPaneVisible: (...args: unknown[]) => readPaneVisible(...args),
+}));
+
 vi.mock("../../lib/terminal/xtermLoader", () => ({
   loadXterm: async () => ({
     Terminal: class {
@@ -107,5 +113,26 @@ describe("XtermView", () => {
     expect(spawnLocalPty).not.toHaveBeenCalled();
     onData("x");
     expect(writePty).toHaveBeenCalledWith("pty-existing", "x");
+  });
+
+  it("seeds visible pane output when herdr bound", async () => {
+    render(
+      <XtermView
+        ptyId="pty-1"
+        herdrPaneId="w5:p1"
+        herdrBound
+        lines={10}
+        active
+      />
+    );
+
+    await waitFor(() => {
+      expect(readPaneVisible).toHaveBeenCalledWith("w5:p1", 24);
+    });
+
+    await waitFor(() => {
+      expect(write).toHaveBeenCalledWith("$ herdr prompt\r\n");
+    });
+    expect(reset).toHaveBeenCalled();
   });
 });

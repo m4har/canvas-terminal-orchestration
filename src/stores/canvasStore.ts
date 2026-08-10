@@ -5,7 +5,12 @@ import { createDemoWorkflow } from "../lib/demoWorkflow";
 import { buildHandoffPayload, buildPlayPayload, findEdgeSource } from "../lib/handoff";
 import { findDownstreamMarkdownIds, findMirrorTerminalId } from "../lib/edgeRules";
 import { playOrchestraAgent, type OrchestraAgent } from "../lib/orchestra/client";
-import { bindHerdrToTerminal, isLocalShell } from "../lib/herdr/bind";
+import {
+  bindHerdrToTerminal,
+  isLocalShell,
+  rebindHerdrToTerminal,
+} from "../lib/herdr/bind";
+import { checkHerdrAvailable } from "../lib/herdr/dispatch";
 import { runHandoff } from "../lib/herdr/dispatch";
 import { getProjectCwd } from "../lib/herdr/env";
 import { assessHerdrReady } from "../lib/herdr/requireHerdr";
@@ -155,6 +160,7 @@ interface CanvasState {
   closeMarkdownEditor: () => void;
   forceDone: (terminalId: string) => void;
   bindHerdr: (terminalId: string, ptyId: string, cols?: number, rows?: number) => void;
+  rebindHerdr: (terminalId: string, ptyId: string, cols?: number, rows?: number) => void;
   openHerdrInstall: (input: {
     reason: HerdrInstallReason;
     pendingBind?: HerdrInstallState["pendingBind"];
@@ -652,6 +658,19 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     })();
   },
 
+  rebindHerdr: (terminalId, ptyId, cols = 80, rows = 24) => {
+    void (async () => {
+      if (!(await checkHerdrAvailable(true))) {
+        get().updateTerminalNode(terminalId, {
+          status: "blocked",
+          outputPreview: "$ herdr offline — start server and reopen terminal\n",
+        });
+        return;
+      }
+      await rebindHerdrToTerminal(get, terminalId, ptyId, cols, rows);
+    })();
+  },
+
   setNodes: (nodes) => set({ nodes }),
   setEdges: (edges) => set({ edges }),
 
@@ -665,8 +684,11 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     void setAppSetting(APP_SETTING_INTRO_COMPLETED, "true");
     if (keepDemo) {
       set({ introActive: false });
+      const { workflowId, nodes, edges } = get();
+      void saveCanvas(workflowId, nodes, edges);
     } else {
       set({ nodes: [], edges: [], introActive: false });
+      void saveCanvas(get().workflowId, [], []);
     }
   },
 

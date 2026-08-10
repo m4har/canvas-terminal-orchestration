@@ -15,6 +15,7 @@ static PTY_COUNTER: AtomicU64 = AtomicU64::new(1);
 
 enum PtyBackend {
     Local {
+        master: Arc<Mutex<Box<dyn portable_pty::MasterPty + Send>>>,
         writer: Arc<Mutex<Box<dyn Write + Send>>>,
         child: Arc<Mutex<Box<dyn portable_pty::Child + Send + Sync>>>,
     },
@@ -68,14 +69,14 @@ impl PtyManager {
             .map_err(|e| format!("failed to spawn shell: {e}"))?;
         drop(pair.slave);
 
-        let mut reader = pair
-            .master
+        let mut master = pair.master;
+        let mut reader = master
             .try_clone_reader()
             .map_err(|e| format!("failed to clone pty reader: {e}"))?;
-        let writer = pair
-            .master
+        let writer = master
             .take_writer()
             .map_err(|e| format!("failed to take pty writer: {e}"))?;
+        let master = Arc::new(Mutex::new(master));
 
         let pty_id = format!("pty-{}", PTY_COUNTER.fetch_add(1, Ordering::Relaxed));
         let writer = Arc::new(Mutex::new(writer));
@@ -109,6 +110,7 @@ impl PtyManager {
             pty_id.clone(),
             PtySession {
                 backend: PtyBackend::Local {
+                    master,
                     writer,
                     child,
                 },
@@ -194,7 +196,17 @@ impl PtyManager {
             .get(pty_id)
             .ok_or_else(|| format!("pty session not found: {pty_id}"))?;
         match &session.backend {
-            PtyBackend::Local { .. } => {}
+            PtyBackend::Local { master, .. } => {
+                let master = master.lock().map_err(|e| e.to_string())?;
+                master
+                    .resize(PtySize {
+                        rows,
+                        cols,
+                        pixel_width: 0,
+                        pixel_height: 0,
+                    })
+                    .map_err(|e| format!("pty resize failed: {e}"))?;
+            }
             PtyBackend::Herdr { session } => session.resize(cols, rows)?,
         }
         Ok(())

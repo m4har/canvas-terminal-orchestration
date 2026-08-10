@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useCanvasStore } from "../stores/canvasStore";
 import { takePendingHmrCanvasSnapshot } from "../lib/hmrCanvasSnapshot";
 import { isAutomationMode } from "../lib/runtimeFlags";
@@ -9,9 +10,18 @@ import {
   saveCanvas,
   getAppSetting,
   APP_SETTING_INTRO_COMPLETED,
+  isTauriRuntime,
 } from "../lib/workflow";
 
 const DEBOUNCE_MS = 500;
+
+/** Persist current canvas immediately (e.g. before app quit). */
+export function flushCanvasSave(): Promise<void> {
+  const { workflowId, nodes, edges, initialized, introActive } =
+    useCanvasStore.getState();
+  if (!initialized || introActive) return Promise.resolve();
+  return saveCanvas(workflowId, nodes, edges);
+}
 
 export function useCanvasPersistence() {
   const workflowId = useCanvasStore((state) => state.workflowId);
@@ -82,4 +92,38 @@ export function useCanvasPersistence() {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [workflowId, nodes, edges, initialized, introActive]);
+
+  useEffect(() => {
+    const flush = () => {
+      void flushCanvasSave();
+    };
+    window.addEventListener("beforeunload", flush);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") flush();
+    });
+    return () => {
+      window.removeEventListener("beforeunload", flush);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isTauriRuntime()) return;
+    let quitting = false;
+    let unlisten: (() => void) | undefined;
+    void getCurrentWindow()
+      .onCloseRequested((event) => {
+        if (quitting) return;
+        event.preventDefault();
+        quitting = true;
+        void flushCanvasSave().finally(() => {
+          void getCurrentWindow().destroy();
+        });
+      })
+      .then((fn) => {
+        unlisten = fn;
+      });
+    return () => {
+      unlisten?.();
+    };
+  }, []);
 }

@@ -6,6 +6,7 @@ import { IntroOverlay } from "./components/onboarding/IntroOverlay";
 import { ThemeProvider } from "./components/theme/ThemeProvider";
 import { useCanvasPersistence } from "./hooks/useCanvasPersistence";
 import { useHerdrConnection } from "./hooks/useHerdrConnection";
+import { useHerdrTerminalReconnect } from "./hooks/useHerdrTerminalReconnect";
 import { useOrchestratorStatus } from "./hooks/useOrchestratorStatus";
 import { useOrchestraAgentStatus } from "./hooks/useOrchestraAgentStatus";
 import { resolveProjectCwd } from "./lib/herdr/env";
@@ -15,6 +16,7 @@ import { preloadXterm } from "./lib/terminal/xtermLoader";
 function AppShell() {
   useCanvasPersistence();
   useHerdrConnection();
+  useHerdrTerminalReconnect();
   useOrchestratorStatus();
   useOrchestraAgentStatus();
 

@@ -27,7 +27,7 @@ describe("IntroOverlay", () => {
 
   it("shows welcome modal on first step", () => {
     render(<IntroOverlay />);
-    expect(screen.getByText("Canvas Orchestra")).toBeInTheDocument();
+    expect(screen.getByText("Canvastor")).toBeInTheDocument();
   });
 
   it("advances through modal steps", () => {

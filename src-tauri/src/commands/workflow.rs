@@ -28,6 +28,7 @@ pub struct CanvasSnapshot {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SaveCanvasRequest {
     pub workflow_id: String,
     pub nodes: Vec<CanvasNodeDto>,

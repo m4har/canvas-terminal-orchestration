@@ -6,7 +6,7 @@
 
 ## Context
 
-Canvas Orchestra v0.1 delegates agent execution to Herdr CLI runtimes inside TerminalNodes. Users want configurable headless agents on the canvas — with profiles, skills, memory, and model choice — without requiring Herdr for every orchestration step.
+Canvastor v0.1 delegates agent execution to Herdr CLI runtimes inside TerminalNodes. Users want configurable headless agents on the canvas — with profiles, skills, memory, and model choice — without requiring Herdr for every orchestration step.
 
 AGENTS.md previously listed *"Built-in agent execution inside the Tauri app"* as a non-goal. This ADR supersedes that constraint for **OrchestraAgent** only. TerminalNode/Herdr remains the path for shell/tool execution.
 

@@ -53,7 +53,7 @@ export function Features() {
               </h2>
             </div>
             <p className="max-w-sm text-sm leading-relaxed text-[var(--muted-foreground)]">
-              Canvas Orchestra supervises Herdr panes and headless OrchestraAgents.
+              Canvastor supervises Herdr panes and headless OrchestraAgents.
               Configure profiles, skills, and LLM settings in one place.
             </p>
           </div>

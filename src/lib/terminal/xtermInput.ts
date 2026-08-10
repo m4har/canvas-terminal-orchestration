@@ -54,6 +54,12 @@ export function encodeXtermInput(data: string): PaneInput {
   return { kind: "text", text: data };
 }
 
+/** Normalize xterm keystrokes before writing to a local PTY. */
+export function normalizePtyInput(data: string): string {
+  if (data === "\x08") return "\x7f";
+  return data;
+}
+
 export function shouldLocalEchoInput(data: string): boolean {
   return localEchoForInput(data) !== null;
 }
@@ -64,7 +70,7 @@ export function localEchoForInput(data: string): string | null {
   if (input.kind === "text") return input.text;
   if (input.kind === "keys") {
     if (input.keys[0] === "backspace") return "\b \b";
-    if (input.keys[0] === "delete") return data;
+    if (input.keys[0] === "delete") return null;
   }
   return null;
 }

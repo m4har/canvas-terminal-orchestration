@@ -20,12 +20,15 @@ import {
   canFitTerminal,
   clampTerminalSize,
 } from "../../lib/terminal/fitTerminal";
+import { normalizePtyInput } from "../../lib/terminal/xtermInput";
+import { readPaneVisible } from "../../lib/herdr/client";
 
 import "@xterm/xterm/css/xterm.css";
 
 interface XtermViewProps {
   ptyId?: string;
   cwd?: string;
+  herdrPaneId?: string;
   fallbackText?: string;
   lines?: number;
   fontSize?: number;
@@ -39,6 +42,7 @@ interface XtermViewProps {
 export function XtermView({
   ptyId: ptyIdProp,
   cwd = "",
+  herdrPaneId,
   fallbackText = "",
   lines = 12,
   fontSize = 11,
@@ -56,6 +60,7 @@ export function XtermView({
   const ptyIdRef = useRef(ptyIdProp);
   const unlistenRef = useRef<(() => void) | null>(null);
   const spawnedHereRef = useRef(false);
+  const seededHerdrRef = useRef<string | null>(null);
 
   const fitTerminal = () => {
     const host = hostRef.current;
@@ -127,7 +132,7 @@ export function XtermView({
       term.onData((data) => {
         const ptyId = ptyIdRef.current;
         if (ptyId) {
-          void writePty(ptyId, data);
+          void writePty(ptyId, normalizePtyInput(data));
         }
       });
 
@@ -197,9 +202,35 @@ export function XtermView({
   }, [ready]);
 
   useEffect(() => {
-    if (!ready || !herdrBound) return;
-    termRef.current?.reset();
-  }, [herdrBound, ready]);
+    if (!ready || !herdrBound || !herdrPaneId || !ptyIdProp) return;
+
+    const seedKey = `${ptyIdProp}:${herdrPaneId}`;
+    if (seededHerdrRef.current === seedKey) return;
+
+    let cancelled = false;
+    const term = termRef.current;
+    term?.reset();
+
+    void readPaneVisible(herdrPaneId, term?.rows ?? lines).then((text) => {
+      if (cancelled) return;
+      seededHerdrRef.current = seedKey;
+      const live = termRef.current;
+      if (!live) return;
+      if (text) {
+        live.write(text.replace(/\n/g, "\r\n"));
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [herdrBound, herdrPaneId, lines, ptyIdProp, ready]);
+
+  useEffect(() => {
+    if (!herdrBound) {
+      seededHerdrRef.current = null;
+    }
+  }, [herdrBound]);
 
   useEffect(() => {
     if (!ready || isTauriRuntime() || isAutomationMode()) return;

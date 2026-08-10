@@ -8,7 +8,7 @@
 
 ADR 0003 separated interactive terminal I/O from Herdr polling. Handoff to LocalShell terminals still forced Herdr bind and used `herdr agent prompt` subprocesses. Status badges polled `herdr pane list` every 2s per TerminalNode — slow, subprocess-heavy, and blocked handoff when Herdr was offline.
 
-Canvas Orchestra needs in-process orchestration for LocalShell: write handoff payloads directly to the embedded PTY and push agent status from the output stream.
+Canvastor needs in-process orchestration for LocalShell: write handoff payloads directly to the embedded PTY and push agent status from the output stream.
 
 ## Decision
 

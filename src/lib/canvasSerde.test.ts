@@ -18,6 +18,50 @@ describe("canvasSerde", () => {
     expect(restored.data).toMatchObject({ label: "Planner", herdrPaneId: "wM:p2" });
   });
 
+  it("does not persist ephemeral ptyId on terminal nodes", () => {
+    const node: Node = {
+      id: "term-1",
+      type: "terminal",
+      position: { x: 0, y: 0 },
+      data: {
+        label: "T",
+        herdrPaneId: "wM:p2",
+        herdrBound: true,
+        cwd: "/p",
+        status: "idle",
+        outputPreview: "",
+        ptyId: "pty-dead",
+      },
+    };
+
+    const dto = nodeToDto(node);
+    expect(JSON.parse(dto.data_json)).not.toHaveProperty("ptyId");
+
+    const restored = dtoToFlowNode(dto);
+    expect((restored.data as { ptyId?: string }).ptyId).toBeUndefined();
+  });
+
+  it("strips legacy ptyId when loading old snapshots", () => {
+    const dto = {
+      id: "term-1",
+      node_type: "terminal",
+      position_x: 0,
+      position_y: 0,
+      data_json: JSON.stringify({
+        label: "T",
+        herdrPaneId: "wM:p2",
+        herdrBound: true,
+        cwd: "/p",
+        status: "idle",
+        outputPreview: "",
+        ptyId: "pty-dead",
+      }),
+    };
+
+    const restored = dtoToFlowNode(dto);
+    expect((restored.data as { ptyId?: string }).ptyId).toBeUndefined();
+  });
+
   it("restores square defaults when meta missing", () => {
     const dto = {
       id: "sq-1",

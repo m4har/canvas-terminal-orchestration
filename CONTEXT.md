@@ -1,6 +1,6 @@
 # Domain Glossary
 
-Ubiquitous language for Canvas Orchestra Loop Engineer. Implementation details belong in RFC, not here.
+Ubiquitous language for Canvastor. Implementation details belong in RFC, not here.
 
 ## Canvas & Layout
 
@@ -72,5 +72,5 @@ Ubiquitous language for Canvas Orchestra Loop Engineer. Implementation details b
 | **Canvas PTY** | Interactive terminal I/O (LocalShell and HerdrBound display path) |
 | **OrchestratorBus** | LocalShell handoff dispatch and push status from PTY output (no Herdr CLI) |
 | **Herdr** | Pane lifecycle after bind, agent runtimes, agent-to-agent prompts, lifecycle state (`idle` / `working` / `blocked` / `done`) for HerdrBound nodes |
-| **Canvas Orchestra** | Herdr lifecycle (binary install, server spawn/shutdown), lazy bind, visual layout, context routing (handoff/trigger), status display, workflow persistence, OrchestraAgent registry, global LLM/MCP settings |
+| **Canvastor** | Herdr lifecycle (binary install, server spawn/shutdown), lazy bind, visual layout, context routing (handoff/trigger), status display, workflow persistence, OrchestraAgent registry, global LLM/MCP settings |
 | **MarkdownNode** | Spec/plan source of truth on canvas |

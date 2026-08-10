@@ -58,9 +58,11 @@ export async function saveCanvas(
 ): Promise<void> {
   if (isTauriRuntime()) {
     await invoke("save_canvas", {
-      workflowId,
-      nodes: nodes.map(nodeToDto),
-      edges: edges.map(edgeToDto),
+      payload: {
+        workflowId,
+        nodes: nodes.map(nodeToDto),
+        edges: edges.map(edgeToDto),
+      },
     });
     return;
   }

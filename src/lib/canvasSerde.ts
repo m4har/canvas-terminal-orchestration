@@ -1,5 +1,13 @@
 import type { Edge, Node } from "@xyflow/react";
-import type { SquareNodeData } from "./types";
+import type { SquareNodeData, TerminalNodeData } from "./types";
+
+/** PTY sessions die with the app — never persist or restore ptyId. */
+export function stripEphemeralTerminalFields(
+  data: Record<string, unknown>
+): Record<string, unknown> {
+  const { ptyId: _ptyId, ...rest } = data;
+  return rest;
+}
 
 export interface CanvasNodeDto {
   id: string;
@@ -27,13 +35,15 @@ type StoredNodeData = Record<string, unknown> & { __flow?: FlowMeta };
 
 export function nodeToDto(node: Node): CanvasNodeDto {
   const { __flow: _ignored, ...data } = (node.data ?? {}) as StoredNodeData;
+  const payload =
+    node.type === "terminal" ? stripEphemeralTerminalFields(data) : data;
   return {
     id: node.id,
     node_type: node.type ?? "text",
     position_x: node.position.x,
     position_y: node.position.y,
     data_json: JSON.stringify({
-      ...data,
+      ...payload,
       __flow: {
         style: node.style,
         zIndex: node.zIndex,
@@ -46,12 +56,16 @@ export function nodeToDto(node: Node): CanvasNodeDto {
 export function dtoToFlowNode(dto: CanvasNodeDto): Node {
   const parsed = JSON.parse(dto.data_json) as StoredNodeData;
   const { __flow, ...data } = parsed;
+  const nodeData =
+    dto.node_type === "terminal"
+      ? (stripEphemeralTerminalFields(data) as TerminalNodeData)
+      : data;
 
   const node: Node = {
     id: dto.id,
     type: dto.node_type,
     position: { x: dto.position_x, y: dto.position_y },
-    data,
+    data: nodeData,
   };
 
   if (__flow?.style) node.style = __flow.style;

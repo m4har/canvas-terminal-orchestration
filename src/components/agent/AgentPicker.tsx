@@ -9,9 +9,11 @@ import {
   type McpServer,
   type OrchestraAgent,
 } from "../../lib/orchestra/client";
+import { suggestAgentSlug } from "../../lib/orchestra/agentSlug";
 
 interface AgentPickerProps {
   open: boolean;
+  pendingNodeId?: string | null;
   initialSlug?: string;
   initialAgentId?: string;
   onClose: () => void;
@@ -20,6 +22,7 @@ interface AgentPickerProps {
 
 export function AgentPicker({
   open,
+  pendingNodeId,
   initialSlug,
   initialAgentId,
   onClose,
@@ -29,40 +32,73 @@ export function AgentPicker({
   const [agents, setAgents] = useState<OrchestraAgent[]>([]);
   const [mcpServers, setMcpServers] = useState<McpServer[]>([]);
   const [mode, setMode] = useState<"pick" | "create">(initialAgentId ? "pick" : "create");
-  const [slug, setSlug] = useState(initialSlug ?? "my-agent");
+  const [slug, setSlug] = useState("agent");
   const [profileId, setProfileId] = useState("planner");
   const [model, setModel] = useState("planner");
   const [modelTouched, setModelTouched] = useState(false);
   const [selectedMcp, setSelectedMcp] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     if (!open) return;
+    setMode(initialAgentId ? "pick" : "create");
     setModelTouched(false);
-    void listAgentProfiles().then((p) => {
+    setSelectedMcp([]);
+    setError(null);
+    setCreating(false);
+
+    void Promise.all([
+      listAgentProfiles(),
+      listOrchestraAgents(),
+      listMcpServers(),
+    ]).then(([p, existingAgents, mcp]) => {
       setProfiles(p);
-      if (p.length > 0 && !p.some((x) => x.id === profileId)) {
-        const nextProfileId = p[0].id;
-        setProfileId(nextProfileId);
-        setModel(nextProfileId);
+      setAgents(existingAgents);
+      setMcpServers(mcp);
+
+      const defaultProfile = p.find((x) => x.id === "planner") ?? p[0];
+      if (defaultProfile) {
+        setProfileId(defaultProfile.id);
+        setModel(defaultProfile.id);
       }
+
+      const seed = initialSlug ?? pendingNodeId ?? "agent";
+      setSlug(suggestAgentSlug(existingAgents, seed));
     });
-    void listOrchestraAgents().then(setAgents);
-    void listMcpServers().then(setMcpServers);
-    if (initialSlug) setSlug(initialSlug);
-  }, [open, initialSlug, profileId]);
+  }, [open, initialSlug, initialAgentId, pendingNodeId]);
 
   if (!open) return null;
 
   const submitCreate = async () => {
-    const agent = await createOrchestraAgent({
-      slug,
-      profile_id: profileId,
-      model,
-      skill_paths: [],
-      mcp_server_ids: selectedMcp,
-    });
-    onSelect(agent);
-    onClose();
+    const trimmed = slug.trim();
+    if (!trimmed) {
+      setError("Slug is required.");
+      return;
+    }
+    if (agents.some((a) => a.slug === trimmed)) {
+      setError(`Slug "${trimmed}" is already in use. Pick another name.`);
+      return;
+    }
+
+    setCreating(true);
+    setError(null);
+    try {
+      const agent = await createOrchestraAgent({
+        slug: trimmed,
+        profile_id: profileId,
+        model,
+        skill_paths: [],
+        mcp_server_ids: selectedMcp,
+      });
+      onSelect(agent);
+      onClose();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message);
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -100,7 +136,10 @@ export function AgentPicker({
                     onClose();
                   }}
                 >
-                  {agent.slug} <span className="text-[var(--muted-foreground)]">({agent.profile_id})</span>
+                  {agent.slug}{" "}
+                  <span className="text-[var(--muted-foreground)]">
+                    · {agent.profile_id} · {agent.model}
+                  </span>
                 </button>
               </li>
             ))}
@@ -178,13 +217,19 @@ export function AgentPicker({
                 ))}
               </fieldset>
             )}
+            {error && (
+              <p className="rounded border border-red-500/40 bg-red-500/10 px-2 py-1 text-[10px] text-red-600">
+                {error}
+              </p>
+            )}
             <button
               type="button"
               data-testid="agent-create"
-              className="w-full rounded bg-[var(--foreground)] py-1.5 text-[var(--background)]"
+              disabled={creating}
+              className="w-full rounded bg-[var(--foreground)] py-1.5 text-[var(--background)] disabled:opacity-50"
               onClick={() => void submitCreate()}
             >
-              Create agent
+              {creating ? "Creating…" : "Create agent"}
             </button>
           </div>
         )}

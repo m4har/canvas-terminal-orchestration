@@ -15,6 +15,7 @@ vi.mock("../lib/workflow", () => ({
   dtoToFlowNodes: vi.fn((nodes) => nodes),
   dtoToFlowEdges: vi.fn((edges) => edges),
   APP_SETTING_INTRO_COMPLETED: "intro_completed",
+  isTauriRuntime: vi.fn(() => false),
 }));
 
 import { useCanvasStore } from "../stores/canvasStore";

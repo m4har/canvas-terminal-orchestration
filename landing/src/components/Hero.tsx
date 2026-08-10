@@ -40,7 +40,7 @@ export function Hero() {
             transition={{ ...spring, delay: 0.35 }}
             className="mt-6 max-w-[48ch] text-base leading-relaxed text-[var(--muted-foreground)]"
           >
-            Canvas Orchestra is a visual workflow canvas for AI coding agents.
+            Canvastor is a visual workflow canvas for AI coding agents.
             Configure AgentProfiles and skills, run OrchestraAgents headless, and
             route specs downstream.
           </motion.p>

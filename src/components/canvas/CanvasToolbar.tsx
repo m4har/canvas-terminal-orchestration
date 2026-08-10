@@ -18,6 +18,7 @@ import { useTerminalFontSize, TERMINAL_FONT_SIZES } from "../../hooks/useTermina
 import { useViewportCenter } from "../../hooks/useViewportCenter";
 import { useCanvasStore } from "../../stores/canvasStore";
 import { HerdrStatusBadge } from "./HerdrStatusBadge";
+import { CanvastorLogo } from "@brand/CanvastorLogo";
 
 export function CanvasToolbar() {
   const addTextNode = useCanvasStore((state) => state.addTextNode);
@@ -42,9 +43,7 @@ export function CanvasToolbar() {
 
   return (
     <header className="flex h-10 shrink-0 items-center gap-1 border-b border-[var(--border)] px-3">
-      <span className="mr-2 text-sm font-medium text-[var(--foreground)]">
-        Canvas Orchestra
-      </span>
+      <CanvastorLogo iconSize={18} className="mr-2" />
 
       <ToolbarButton
         label="Add text"

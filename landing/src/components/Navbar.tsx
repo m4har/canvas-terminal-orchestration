@@ -1,4 +1,5 @@
 import { GithubLogo, ArrowUpRight, Moon, Sun } from "@phosphor-icons/react";
+import { CanvastorLogo } from "@brand/CanvastorLogo";
 import { GITHUB_URL } from "../lib/constants";
 import { useLandingTheme } from "./theme/LandingThemeProvider";
 
@@ -9,12 +10,8 @@ export function Navbar() {
     <nav className="fixed top-0 z-40 w-full">
       <div className="glass-panel mx-4 mt-4 rounded-2xl">
         <div className="mx-auto flex h-12 max-w-7xl items-center justify-between px-5">
-          <a href="#" className="flex items-center gap-2.5 text-sm font-medium tracking-tight">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-pulse-ring rounded-full bg-[var(--accent)] opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--accent)]" />
-            </span>
-            Canvas Orchestra
+          <a href="#" className="text-[var(--foreground)]">
+            <CanvastorLogo iconSize={22} />
           </a>
 
           <div className="hidden items-center gap-6 text-xs text-[var(--muted-foreground)] md:flex">

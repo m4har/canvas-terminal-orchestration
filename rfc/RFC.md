@@ -1,4 +1,4 @@
-# RFC — Canvas Orchestra Loop Engineer
+# RFC — Canvastor
 
 **Status:** Final  
 **Version:** 0.1  
@@ -9,7 +9,7 @@
 
 ## 1. Summary
 
-Technical specification for Canvas Orchestra Loop Engineer v0.1: a Tauri desktop app with a React canvas UI, Herdr as the terminal backend, and SQLite for workflow persistence.
+Technical specification for Canvastor v0.1: a Tauri desktop app with a React canvas UI, Herdr as the terminal backend, and SQLite for workflow persistence.
 
 Canvas **supervises and routes context**; Herdr **executes agents and handles inter-agent communication**.
 

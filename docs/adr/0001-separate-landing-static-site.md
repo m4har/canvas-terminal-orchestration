@@ -5,7 +5,7 @@
 
 ## Context
 
-Canvas Orchestra is a Tauri desktop app for visual agent orchestration. The product is not a website — it runs locally with Herdr integration and SQLite persistence. We need a public-facing landing page to introduce the product and link to the GitHub repository, deployable to Railway.
+Canvastor is a Tauri desktop app for visual agent orchestration. The product is not a website — it runs locally with Herdr integration and SQLite persistence. We need a public-facing landing page to introduce the product and link to the GitHub repository, deployable to Railway.
 
 ## Decision
 

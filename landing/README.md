@@ -1,6 +1,6 @@
-# Canvas Orchestra Landing Page
+# Canvastor Landing Page
 
-Static marketing site for [Canvas Orchestra](https://github.com/m4har/canvas-terminal-orchestration).
+Static marketing site for [Canvastor](https://github.com/m4har/canvas-terminal-orchestration).
 
 ## Local development
 

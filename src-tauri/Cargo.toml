@@ -1,7 +1,7 @@
 [package]
 name = "canvas-orchestra-loop-engineer"
 version = "0.1.0"
-description = "Canvas Orchestra Loop Engineer"
+description = "Canvastor — visual agent orchestration"
 authors = ["mahar"]
 edition = "2021"
 

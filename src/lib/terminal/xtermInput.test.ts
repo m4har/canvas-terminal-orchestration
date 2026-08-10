@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { encodeXtermInput, localEchoForInput, shouldLocalEchoInput } from "./xtermInput";
+import { encodeXtermInput, localEchoForInput, normalizePtyInput, shouldLocalEchoInput } from "./xtermInput";
 
 describe("encodeXtermInput", () => {
   it("maps tab to herdr tab key", () => {
@@ -26,6 +26,11 @@ describe("encodeXtermInput", () => {
     expect(shouldLocalEchoInput("\t")).toBe(false);
     expect(shouldLocalEchoInput("x")).toBe(true);
     expect(localEchoForInput("\x7f")).toBe("\b \b");
-    expect(localEchoForInput("\x1b[3~")).toBe("\x1b[3~");
+    expect(localEchoForInput("\x1b[3~")).toBeNull();
+  });
+
+  it("normalizes BS to DEL for local PTY", () => {
+    expect(normalizePtyInput("\x08")).toBe("\x7f");
+    expect(normalizePtyInput("a")).toBe("a");
   });
 });
